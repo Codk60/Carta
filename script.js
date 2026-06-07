@@ -254,6 +254,7 @@ function checkPassword() {
 
   if (val === CLAVE_CORRECTA) {
     errorBox.classList.add('hidden');
+    if (!musicaActiva) startMusic();
     unlockPage();
   } else {
     input.value = '';

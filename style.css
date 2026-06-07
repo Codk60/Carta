@@ -195,9 +195,9 @@ body {
 /* ─── ZONA DEL CORAZÓN ─── */
 .heart-zone {
   position: relative;
-  width: 92px;
-  height: 92px;
-  margin: 0 auto 18px;
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 14px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -241,8 +241,8 @@ body {
 .heart-3d {
   position: relative;
   z-index: 2;
-  width: 68px;
-  height: 60px;
+  width: 48px;
+  height: 42px;
   animation: heartBeatPremium 3.5s ease infinite;
   filter:
     drop-shadow(0 4px 8px rgba(90,0,25,0.5))
