@@ -154,8 +154,8 @@ class BorderMarquee {
     this.svg      = document.getElementById('borderSVG');
     this.card     = document.getElementById('passwordCard');
     if (!this.svg || !this.card) return;
-    this.INSET    = 10;
-    this.RADIUS   = 22;   // card 32px − inset 10px
+    this.INSET    = 3;
+    this.RADIUS   = 29;   // card 32px − inset 3px
     this.SPACING  = 14;   // px entre puntitos
     this.DURATION = 8;    // segundos por vuelta de onda
     this.W = this.H = 0;
@@ -194,10 +194,9 @@ class BorderMarquee {
   }
 
   build() {
-    const rect = this.card.getBoundingClientRect();
-    if (!rect.width) return;
-    this.W = rect.width;
-    this.H = rect.height;
+    this.W = this.card.offsetWidth;
+    this.H = this.card.offsetHeight;
+    if (!this.W) return;
     const { W, H, INSET: P, RADIUS: r, SPACING, DURATION: D } = this;
 
     this.svg.setAttribute('width',   W);
@@ -224,8 +223,11 @@ class BorderMarquee {
           <feGaussianBlur in="SourceGraphic" stdDeviation="3.5" result="b"/>
           <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
         </filter>
+        <clipPath id="mq_clip">
+          <rect x="0" y="0" width="${W}" height="${H}" rx="32" ry="32"/>
+        </clipPath>
       </defs>
-      ${dots}
+      <g clip-path="url(#mq_clip)">${dots}</g>
     `;
   }
 
@@ -391,15 +393,19 @@ function toggleMusic() {
   }
 }
 
-// Autoplay: los navegadores bloquean audio sin interacción del usuario.
-// Intentamos al cargar; si falla, esperamos el primer toque/click.
 bgMusic.volume = 0.5;
+// Intentar autoplay inmediato
 startMusic();
-if (!musicaActiva) {
-  const unlockAudio = () => { startMusic(); document.removeEventListener('click', unlockAudio); document.removeEventListener('touchstart', unlockAudio); };
-  document.addEventListener('click', unlockAudio, { once: true });
-  document.addEventListener('touchstart', unlockAudio, { once: true });
-}
+// Si el navegador lo bloqueó, arrancar en el primer gesto (touchstart captura antes que click)
+const _unlockMusic = () => {
+  if (!musicaActiva) startMusic();
+  document.removeEventListener('touchstart', _unlockMusic, true);
+  document.removeEventListener('mousedown',  _unlockMusic, true);
+  document.removeEventListener('keydown',    _unlockMusic, true);
+};
+document.addEventListener('touchstart', _unlockMusic, { capture: true, once: true });
+document.addEventListener('mousedown',  _unlockMusic, { capture: true, once: true });
+document.addEventListener('keydown',    _unlockMusic, { capture: true, once: true });
 
 /* ============================================
    HELPERS — VIBRAR, CORAZONES, DESTELLOS

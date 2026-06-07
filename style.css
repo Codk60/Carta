@@ -148,7 +148,7 @@ body {
   inset: 0;
   pointer-events: none;
   z-index: 50;
-  overflow: visible;
+  overflow: hidden;
 }
 
 /* ─── Tarjeta principal ─── */
