@@ -1,0 +1,8 @@
+Pon aquí tu archivo de audio con el nombre exacto:
+
+  voz.mp3
+
+Formatos compatibles con todos los navegadores: MP3 (recomendado), OGG, AAC.
+
+Si grabas desde el celular, normalmente queda en .m4a —
+conviértelo a MP3 con una app gratuita (online-audio-converter.com) y renómbralo a voz.mp3.

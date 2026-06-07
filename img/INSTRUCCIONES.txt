@@ -1,0 +1,7 @@
+Aquí puedes guardar las fotos que quieras mostrar en la página.
+
+Para agregar fotos en el HTML, usa etiquetas como:
+  <img src="img/nombre-foto.jpg" alt="descripción" />
+
+Formatos recomendados: JPG (fotos), PNG (con transparencia), WebP (mejor compresión).
+Tamaño ideal: menos de 500 KB por foto para que cargue rápido en celular.

@@ -1,0 +1,8 @@
+Pon aquí tu archivo de video con el nombre exacto:
+
+  mensaje.mp4
+
+Formato recomendado: MP4 con codecs H.264 + AAC (el estándar de celulares).
+
+Si el video pesa mucho, comprímelo con HandBrake (gratis) o con cloudconvert.com.
+Tamaño ideal para web: menos de 50 MB.
