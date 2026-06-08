@@ -9,16 +9,26 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Poppins:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,600;1,400&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" defer></script>
 </head>
 <body>
 
+  <!-- ===== INTRO MÁGICO ===== -->
+  <div id="magicIntro" class="magic-intro">
+    <div class="mi-scene">
+      <img id="miOwl"      class="mi-owl"      src="assets/magic-intro/owl-letter.png"       alt="" draggable="false"/>
+      <div id="miEnvWrap"  class="mi-env-wrap">
+        <img id="miSparkles" class="mi-sparkles" src="assets/magic-intro/magic-sparkles.png" alt="" draggable="false"/>
+        <img id="miLetter"   class="mi-letter"   src="assets/magic-intro/letter-paper.png"   alt="" draggable="false"/>
+        <img id="miEnvOpen"  class="mi-env"      src="assets/magic-intro/envelope-open.png"  alt="" draggable="false"/>
+        <img id="miEnvClose" class="mi-env"      src="assets/magic-intro/envelope-closed.png" alt="" draggable="false"/>
+      </div>
+    </div>
+    <button class="mi-skip" onclick="skipIntro()">Saltar ›</button>
+  </div>
+
   <!-- ===== FONDO PROFUNDO ===== -->
   <div class="bg-scene" aria-hidden="true">
-    <!-- Rosas en esquinas -->
-    <div class="corner-rose rose-tl">🌹</div>
-    <div class="corner-rose rose-tr">🌹</div>
-    <div class="corner-rose rose-bl">🌹</div>
-    <div class="corner-rose rose-br">🌹</div>
     <!-- Bokeh y partículas generados por JS -->
     <div id="bgSplatters"></div>
     <div id="bgBokeh"></div>
@@ -33,42 +43,9 @@
       <!-- Tarjeta principal -->
       <div class="pw-card" id="passwordCard">
 
-        <!-- Corazón protagonista 3D -->
-        <div class="heart-zone">
-          <div class="heart-halo-outer"></div>
-          <div class="heart-halo-mid"></div>
-          <div class="heart-circle-light"></div>
-          <div class="heart-3d" id="mainHeart">
-            <svg class="heart-svg" viewBox="0 0 100 88" xmlns="http://www.w3.org/2000/svg">
-              <defs>
-                <radialGradient id="hg" cx="35%" cy="25%" r="65%">
-                  <stop offset="0%"   stop-color="#FF9CB8"/>
-                  <stop offset="25%"  stop-color="#F04070"/>
-                  <stop offset="60%"  stop-color="#C6285B"/>
-                  <stop offset="100%" stop-color="#8B1040"/>
-                </radialGradient>
-                <radialGradient id="hs" cx="30%" cy="20%" r="50%">
-                  <stop offset="0%"   stop-color="rgba(255,255,255,0.55)"/>
-                  <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
-                </radialGradient>
-              </defs>
-              <!-- Sombra del corazón -->
-              <path d="M50 84 C48 82 8 55 8 28 C8 12 20 2 36 2 C44 2 50 7 50 7 C50 7 56 2 64 2 C80 2 92 12 92 28 C92 55 52 82 50 84Z"
-                    fill="#3A0015" opacity="0.25" transform="translate(2,4)"/>
-              <!-- Cuerpo -->
-              <path d="M50 84 C48 82 8 55 8 28 C8 12 20 2 36 2 C44 2 50 7 50 7 C50 7 56 2 64 2 C80 2 92 12 92 28 C92 55 52 82 50 84Z"
-                    fill="url(#hg)"/>
-              <!-- Brillo 3D -->
-              <path d="M50 84 C48 82 8 55 8 28 C8 12 20 2 36 2 C44 2 50 7 50 7 C50 7 56 2 64 2 C80 2 92 12 92 28 C92 55 52 82 50 84Z"
-                    fill="url(#hs)" opacity="0.7"/>
-              <!-- Reflejo pequeño -->
-              <ellipse cx="32" cy="20" rx="9" ry="6" fill="rgba(255,255,255,0.35)" transform="rotate(-30 32 20)"/>
-            </svg>
-          </div>
-          <!-- Mini corazones flotando -->
-          <div id="miniHearts" class="mini-hearts-zone"></div>
-          <!-- Destellos dorados -->
-          <div id="heartSparkles" class="heart-sparkles-zone"></div>
+        <!-- Paltitas decorativas -->
+        <div class="rose-icon-wrap">
+          <img src="img/paltitas.png" class="rose-icon paltitas-img" alt="" draggable="false"/>
         </div>
 
         <!-- Título -->
@@ -82,25 +59,15 @@
         </div>
 
         <!-- Descripción -->
-        <p class="pw-desc">
-          Esta carta está protegida porque no fue escrita para cualquiera...<br />
-          Fue escrita para la persona que tiene mi corazón.
-        </p>
+        <p class="pw-desc" id="pwDesc"><span id="pwTypewriter"></span><span class="pw-cursor">|</span></p>
 
-        <!-- Input llave -->
-        <div class="key-wrap">
-          <div class="key-icon-box" aria-hidden="true">
-            <svg class="key-svg" viewBox="0 0 24 24" fill="none">
-              <circle cx="8.5" cy="14.5" r="4" stroke="#C8A43C" stroke-width="1.8"/>
-              <path d="M11.5 14.5H21M18 11.5v3M21 11.5v3" stroke="#C8A43C" stroke-width="1.8" stroke-linecap="round"/>
-              <circle cx="8.5" cy="14.5" r="1.5" fill="#C8A43C" opacity="0.5"/>
-            </svg>
-          </div>
+        <!-- Input oculto, aparece al presionar el botón -->
+        <div class="key-reveal" id="keyReveal">
           <input
             type="password"
             id="passwordInput"
             class="key-input"
-            placeholder="Escribe la llave secreta..."
+            placeholder="Escribe la clave secreta..."
             autocomplete="off"
             inputmode="text"
           />
@@ -110,21 +77,27 @@
         <button class="btn-enchanted" id="openBtn" onclick="checkPassword()">
           <span class="btn-shimmer"></span>
           <span class="btn-reflect"></span>
-          Abrir mi carta encantada
+          <span id="openBtnText">Abrir mi carta</span>
         </button>
 
         <!-- Error -->
         <div class="error-box hidden" id="errorBox">
           <div class="error-icon-circle">!</div>
-          <p class="error-text">
-            Esa no es la llave correcta...<br />
-            Intenta con algo que solo tú y yo sabemos.
-          </p>
+          <p class="error-text">Esa no es la llave correcta... Intenta con algo que solo tú y yo sabemos.</p>
         </div>
 
-        <!-- Marco luminoso SVG (dentro del card) -->
-        <svg id="borderSVG" class="border-svg" xmlns="http://www.w3.org/2000/svg"></svg>
       </div><!-- /.pw-card -->
+
+      <!-- Borde trazo animado -->
+      <svg id="borderSVG" class="border-svg-outer" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <defs>
+          <filter id="bd_glow" x="-40%" y="-40%" width="180%" height="180%">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="3.5" result="b"/>
+            <feMerge><feMergeNode in="b"/><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+        <rect id="borderRect" class="border-draw-rect" rx="32" filter="url(#bd_glow)"/>
+      </svg>
 
     </div><!-- /.card-scene -->
 
@@ -152,7 +125,9 @@
 
     <section class="hero">
       <h1 class="hero-title">Para Geraldine ❤️</h1>
-      <p class="hero-sub">Hay cosas que una carta no alcanza a decir...<br />por eso creé este álbum solo para ti.</p>
+      <div class="hero-paper">
+        <p class="hero-sub">Hay palabras que el tiempo guarda en silencio...<br />hoy quise escribirlas solo para ti.</p>
+      </div>
     </section>
 
     <!-- Fotos Polaroid -->
@@ -171,6 +146,18 @@
           <div class="polaroid-photo grad-3"><img src="img/WhatsApp Image 2026-06-07 at 2.11.26 PM.jpeg" alt=""/><span class="ph-emoji">✨</span></div>
           <p class="polaroid-caption">El 04 y todo lo demás</p>
         </div>
+        <div class="polaroid" style="--rot:4deg;--delay:0.3s">
+          <div class="polaroid-photo grad-1"><img src="img/foto4.jpeg" alt=""/><span class="ph-emoji">🌹</span></div>
+          <p class="polaroid-caption">Siempre tú</p>
+        </div>
+        <div class="polaroid" style="--rot:-3deg;--delay:0.4s">
+          <div class="polaroid-photo grad-2"><img src="img/foto5.jpeg" alt=""/><span class="ph-emoji">💖</span></div>
+          <p class="polaroid-caption">Mis ojos favoritos</p>
+        </div>
+        <div class="polaroid" style="--rot:2deg;--delay:0.5s">
+          <div class="polaroid-photo grad-3"><img src="img/foto6.jpeg" alt=""/><span class="ph-emoji">🌸</span></div>
+          <p class="polaroid-caption">Tú y yo, siempre</p>
+        </div>
       </div>
     </section>
 
@@ -178,43 +165,84 @@
     <section class="section" id="letterSection">
 
       <!-- Ogro guardián -->
-      <div id="ogroGuardian" class="ogro-wrap ogro-hidden" aria-hidden="true">
-        <div class="ogro-bubble" id="ogroBubble">¡Alto! Esta carta no se abre sin cariño 💗</div>
-        <div class="ogro-shadow"></div>
+      <div id="ogroGuardian" class="ogro-wrap ogro-hidden">
+        <div class="ogro-bubble" id="ogroBubble">¡Hmph! ¿Crees que puedes leer esta carta así nomás? ¡Primero responde mis preguntas! 😤</div>
         <img class="ogro-img" src="img/ogro.png" alt="" draggable="false"/>
+        <div class="ogro-shadow"></div>
+        <div class="ogro-question-box hidden" id="ogroQuestionBox">
+          <p class="ogro-question" id="ogroQuestion"></p>
+          <div class="ogro-btns">
+            <button class="ogro-btn ogro-btn-no" onclick="ogroAnswer(false)">No 😔</button>
+            <button class="ogro-btn ogro-btn-si" onclick="ogroAnswer(true)">Sí 💗</button>
+          </div>
+        </div>
         <div class="ogro-sparkles" id="ogroSparkles"></div>
       </div>
 
-      <button class="letter-toggle" onclick="toggleLetter(this)" aria-expanded="false">
-        <span class="lt-icon">💌</span>
-        <span class="lt-label">Leer mi carta de perdón</span>
-        <span class="lt-arrow">▼</span>
-      </button>
+      <!-- Carta sellada — aparece cuando el ogro se va -->
+      <div class="sl-hint-card hidden" id="slHintAbove">
+        <p class="sl-hint-above">Toca para abrir</p>
+      </div>
+      <div class="sealed-letter hidden" id="sealedLetter" onclick="openSealedLetter(this)">
+        <div class="sl-ribbon-h"></div>
+        <div class="sl-ribbon-v"></div>
+      </div>
       <div class="letter-body" id="letterBody">
         <p id="letterText"></p>
+        <button class="letter-close-btn" onclick="closeLetter()">Guardar carta</button>
       </div>
     </section>
 
     <!-- Frases ocultas -->
     <section class="section">
-      <h2 class="section-title">✦ Toca para descubrir</h2>
-      <div class="hidden-phrases-grid">
-        <div class="hidden-phrase" onclick="revealPhrase(this)">
-          <div class="phrase-lock"><span>🔒</span>Toca aquí</div>
-          <div class="phrase-reveal">"Eres mi lugar favorito en el mundo."</div>
+      <h2 class="section-title">✦ Mis promesas para ti</h2>
+      <p class="section-sub">Cada candado guarda una promesa real. Toca para abrirla.</p>
+      <div class="promises-grid">
+
+        <div class="promise-card" onclick="revealPromise(this)">
+          <div class="promise-seal">
+            <span class="seal-lock">🔒</span>
+            <p class="seal-num">Promesa 1</p>
+          </div>
+          <div class="promise-content hidden">
+            <span class="promise-icon">💍</span>
+            <p class="promise-text">Te prometo elegirte todos los días, incluso cuando sea difícil.</p>
+          </div>
         </div>
-        <div class="hidden-phrase" onclick="revealPhrase(this)">
-          <div class="phrase-lock"><span>🔒</span>Toca aquí</div>
-          <div class="phrase-reveal">"Nuestro 04 siempre vivirá en mi corazón."</div>
+
+        <div class="promise-card" onclick="revealPromise(this)">
+          <div class="promise-seal">
+            <span class="seal-lock">🔒</span>
+            <p class="seal-num">Promesa 2</p>
+          </div>
+          <div class="promise-content hidden">
+            <span class="promise-icon">🌹</span>
+            <p class="promise-text">Te prometo nunca hacerte llorar de tristeza otra vez.</p>
+          </div>
         </div>
-        <div class="hidden-phrase" onclick="revealPhrase(this)">
-          <div class="phrase-lock"><span>🔒</span>Toca aquí</div>
-          <div class="phrase-reveal">"Quiero sanar contigo, no sin ti."</div>
+
+        <div class="promise-card" onclick="revealPromise(this)">
+          <div class="promise-seal">
+            <span class="seal-lock">🔒</span>
+            <p class="seal-num">Promesa 3</p>
+          </div>
+          <div class="promise-content hidden">
+            <span class="promise-icon">🏠</span>
+            <p class="promise-text">Te prometo ser el lugar donde siempre puedas volver.</p>
+          </div>
         </div>
-        <div class="hidden-phrase" onclick="revealPhrase(this)">
-          <div class="phrase-lock"><span>🔒</span>Toca aquí</div>
-          <div class="phrase-reveal">"Tu nombre es lo más bonito de mis días."</div>
+
+        <div class="promise-card" onclick="revealPromise(this)">
+          <div class="promise-seal">
+            <span class="seal-lock">🔒</span>
+            <p class="seal-num">Promesa 4</p>
+          </div>
+          <div class="promise-content hidden">
+            <span class="promise-icon">✨</span>
+            <p class="promise-text">Te prometo amarte mejor cada día que pase a tu lado.</p>
+          </div>
         </div>
+
       </div>
     </section>
 

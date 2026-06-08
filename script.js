@@ -1,4 +1,86 @@
 /* ============================================
+   INTRO MÁGICO
+   ============================================ */
+function skipIntro() {
+  gsap.to('#magicIntro', { opacity: 0, duration: 0.5, onComplete: () => {
+    document.getElementById('magicIntro').style.display = 'none';
+  }});
+}
+
+function launchMiParticles() {
+  const scene = document.querySelector('.mi-scene');
+  if (!scene) return;
+  for (let i = 0; i < 22; i++) {
+    const p = document.createElement('div');
+    p.className = 'mi-particle';
+    const size = 3 + Math.random() * 6;
+    const angle = Math.random() * Math.PI * 2;
+    const dist  = 80 + Math.random() * 130;
+    p.style.width  = size + 'px';
+    p.style.height = size + 'px';
+    p.style.left   = '50%';
+    p.style.bottom = '30%';
+    p.style.setProperty('--tx', Math.cos(angle) * dist + 'px');
+    p.style.setProperty('--ty', (Math.sin(angle) * dist - 40) + 'px');
+    p.style.setProperty('--dur', (0.8 + Math.random() * 1.2) + 's');
+    p.style.setProperty('--delay', (Math.random() * 0.6) + 's');
+    scene.appendChild(p);
+    setTimeout(() => p.remove(), 2500);
+  }
+}
+
+window.addEventListener('load', () => {
+  if (typeof gsap === 'undefined') { skipIntro(); return; }
+
+  const owl      = document.getElementById('miOwl');
+  const envWrap  = document.getElementById('miEnvWrap');
+  const envClose = document.getElementById('miEnvClose');
+  const envOpen  = document.getElementById('miEnvOpen');
+  const letter   = document.getElementById('miLetter');
+  const sparkles = document.getElementById('miSparkles');
+
+  gsap.set(owl,      { x: 200, y: -220, opacity: 0, rotation: -25, scale: 0.8 });
+  gsap.set(envWrap,  { opacity: 0, y: 80, scale: 0.85 });
+  gsap.set(envClose, { opacity: 0 });
+  gsap.set(envOpen,  { opacity: 0 });
+  gsap.set(letter,   { opacity: 0 });
+  gsap.set(sparkles, { opacity: 0, scale: 0.6 });
+
+  const tl = gsap.timeline({ onComplete: () => {
+    gsap.to('#magicIntro', { opacity: 0, duration: 0.6, ease: 'power1.inOut', onComplete: () => {
+      document.getElementById('magicIntro').style.display = 'none';
+    }});
+  }});
+
+  // Lechuza entra desde arriba derecha
+  tl.to(owl, { x: 0, y: -90, opacity: 1, rotation: 8, scale: 1, duration: 1.6, ease: 'power3.out' })
+    .to(owl, { rotation: -10, duration: 0.22, ease: 'sine.inOut' })
+    .to(owl, { rotation:  8,  duration: 0.22, ease: 'sine.inOut' })
+    .to(owl, { rotation: -6,  duration: 0.18, ease: 'sine.inOut' })
+    .to(owl, { rotation:  3,  duration: 0.15, ease: 'sine.inOut' })
+    .to(owl, { y: -20, scale: 1.05, duration: 0.3, ease: 'power1.inOut' })
+    // Lechuza sale con desenfoque, sobre aparece simultáneamente
+    .call(() => {
+      gsap.set(envOpen, { opacity: 1 });
+      gsap.set(envWrap, { y: 40, scale: 0.6, opacity: 0, rotation: -10 });
+    })
+    .to(owl, { x: -200, y: -220, opacity: 0, filter: 'blur(8px)', rotation: -25, scale: 0.75, duration: 0.55, ease: 'power2.in' })
+    .to(envWrap, { opacity: 1, y: 0, scale: 1.12, rotation: 10, duration: 0.5, ease: 'power2.out' }, '-=0.45')
+    .to(envWrap, { rotation: -6, duration: 0.18, ease: 'sine.inOut' })
+    .to(envWrap, { rotation: 3,  duration: 0.14, ease: 'sine.inOut' })
+    .to(envWrap, { rotation: 0,  duration: 0.11, ease: 'sine.out' })
+    // Sparkles y partículas
+    .to(sparkles, { opacity: 1, scale: 1.1, duration: 0.3, ease: 'power2.out' }, '-=0.3')
+    .call(launchMiParticles, null, '-=0.1')
+    // Brillo en el sobre
+    .to(envWrap, { filter: 'drop-shadow(0 0 70px rgba(255,230,100,1)) drop-shadow(0 0 120px rgba(255,210,80,0.75))', duration: 0.28, yoyo: true, repeat: 1 }, '+=0.1')
+    // Sobre se desvanece suavemente — el flash se encarga del resto
+    .to(sparkles, { opacity: 0, duration: 0.18 }, '+=0.05')
+    .to(envWrap, { scale: 1.2, opacity: 0, duration: 0.35, ease: 'power2.in' })
+    .to({}, { duration: 0.02 });
+});
+
+/* ============================================
    FONDO — BOKEH, PARTÍCULAS, CORAZONES
    ============================================ */
 (function initBackground() {
@@ -29,15 +111,15 @@
 
   // Partículas doradas flotando hacia arriba
   const partWrap = document.getElementById('bgParticles');
-  for (let i = 0; i < 32; i++) {
+  for (let i = 0; i < 55; i++) {
     const p = document.createElement('div');
     p.className = 'gold-particle';
     const size = 2 + Math.random() * 3;
     p.style.width  = size + 'px';
     p.style.height = size + 'px';
     p.style.left   = Math.random() * 100 + 'vw';
-    p.style.top    = (55 + Math.random() * 55) + 'vh';
-    p.style.setProperty('--py', -(70 + Math.random() * 100) + 'px');
+    p.style.top    = (5 + Math.random() * 90) + 'vh';
+    p.style.setProperty('--py', -(120 + Math.random() * 180) + 'px');
     p.style.animationDuration = (10 + Math.random() * 14) + 's';
     p.style.animationDelay    = (-Math.random() * 14) + 's';
     partWrap.appendChild(p);
@@ -93,165 +175,117 @@
 })();
 
 /* ============================================
-   MINI CORAZONES + DESTELLOS ALREDEDOR DEL CORAZÓN SVG
+   TYPEWRITER — TEXTO DESCRIPCIÓN
    ============================================ */
-(function initHeartOrbit() {
-  // Mini corazones orbitales
-  const mhWrap = document.getElementById('miniHearts');
-  if (mhWrap) {
-    const emojis = ['♥', '♡', '♥', '✦', '♡'];
-    const count  = 7;
-    for (let i = 0; i < count; i++) {
-      const el  = document.createElement('span');
-      el.className   = 'mini-heart-el';
-      el.textContent = emojis[Math.floor(Math.random() * emojis.length)];
-      const ang = (Math.PI * 2 / count) * i;
-      const r1  = 30 + Math.random() * 15;
-      const r2  = r1 + 18 + Math.random() * 10;
-      const r3  = r2 + 12 + Math.random() * 8;
-      const r4  = r3 + 8;
-      el.style.setProperty('--x0', Math.cos(ang) * r1 + 'px');
-      el.style.setProperty('--y0', Math.sin(ang) * r1 + 'px');
-      el.style.setProperty('--x1', Math.cos(ang + 0.25) * r2 + 'px');
-      el.style.setProperty('--y1', Math.sin(ang + 0.25) * r2 + 'px');
-      el.style.setProperty('--x2', Math.cos(ang + 0.55) * r3 + 'px');
-      el.style.setProperty('--y2', Math.sin(ang + 0.55) * r3 + 'px');
-      el.style.setProperty('--x3', Math.cos(ang + 0.8) * r4 + 'px');
-      el.style.setProperty('--y3', Math.sin(ang + 0.8) * r4 + 'px');
-      el.style.animationDuration = (2.8 + Math.random() * 2.5) + 's';
-      el.style.animationDelay    = (-Math.random() * 4) + 's';
-      mhWrap.appendChild(el);
-    }
+(function initTypewriter() {
+  const target = document.getElementById('pwTypewriter');
+
+  if (!target) return;
+  const text1  = 'Esta carta espera a quien ya sabe la clave de mi corazón.';
+  const text2  = 'La música de abajo hará que esto sea más especial. Tócala antes de seguir.';
+  const desc   = document.getElementById('pwDesc');
+  const cursor = document.querySelector('.pw-cursor');
+  const HOLD1  = 2000;
+  const HOLD2  = 3800;
+  const FADE   = 700;
+  const SPEED  = 44;
+
+  function fadeOut(cb) {
+    desc.style.transition = `opacity ${FADE}ms ease`;
+    desc.style.opacity = '0';
+    setTimeout(cb, FADE);
+  }
+  function fadeIn(txt, cb) {
+    target.textContent = txt;
+    desc.style.opacity = '1';
+    setTimeout(cb, FADE + 200);
+  }
+  function typeText(txt, cb) {
+    let i = 0;
+    target.textContent = '';
+    if (cursor) { cursor.style.animation = ''; cursor.style.opacity = '1'; }
+    const t = setInterval(() => {
+      target.textContent = txt.slice(0, ++i);
+      if (i >= txt.length) {
+        clearInterval(t);
+        if (cursor) { cursor.style.animation = 'none'; cursor.style.opacity = '0'; }
+        setTimeout(cb, HOLD1);
+      }
+    }, SPEED);
   }
 
-  // Destellos dorados
-  const spWrap = document.getElementById('heartSparkles');
-  if (spWrap) {
-    const sparkChars = ['✦', '✧', '✶', '⋆'];
-    for (let i = 0; i < 9; i++) {
-      const el  = document.createElement('span');
-      el.className   = 'sparkle-el';
-      el.textContent = sparkChars[Math.floor(Math.random() * sparkChars.length)];
-      const ang = (Math.PI * 2 / 9) * i;
-      const r1  = 40 + Math.random() * 18;
-      const r2  = r1 + 12 + Math.random() * 10;
-      el.style.setProperty('--sx',  Math.cos(ang) * r1 + 'px');
-      el.style.setProperty('--sy',  Math.sin(ang) * r1 + 'px');
-      el.style.setProperty('--sx2', Math.cos(ang + 0.5) * r2 + 'px');
-      el.style.setProperty('--sy2', Math.sin(ang + 0.5) * r2 + 'px');
-      el.style.animationDuration = (1.8 + Math.random() * 2.2) + 's';
-      el.style.animationDelay    = (-Math.random() * 3) + 's';
-      spWrap.appendChild(el);
-    }
+  function cycle() {
+    typeText(text1, () => {
+      fadeOut(() => {
+        fadeIn(text2, () => {
+          setTimeout(() => {
+            fadeOut(() => {
+              desc.style.transition = 'none';
+              target.textContent = '';
+              desc.style.opacity = '1';
+              setTimeout(cycle, 300);
+            });
+          }, HOLD2);
+        });
+      });
+    });
   }
+
+  setTimeout(cycle, 1000);
 })();
 
 /* ============================================
-   MARCO LUMINOSO SVG — ONDA ELEGANTE DE PUNTITOS
+   BORDE TRAZO ANIMADO
    ============================================ */
-class BorderMarquee {
-  constructor() {
-    this.svg      = document.getElementById('borderSVG');
-    this.card     = document.getElementById('passwordCard');
-    if (!this.svg || !this.card) return;
-    this.INSET    = 3;
-    this.RADIUS   = 29;   // card 32px − inset 3px
-    this.SPACING  = 14;   // px entre puntitos
-    this.DURATION = 8;    // segundos por vuelta de onda
-    this.W = this.H = 0;
-    requestAnimationFrame(() => this.build());
-    // Reconstruir cuando la card cambie de altura (ej. al aparecer el error)
-    if (window.ResizeObserver) {
-      new ResizeObserver(() => {
-        clearTimeout(this._rt);
-        this._rt = setTimeout(() => this.build(), 60);
-      }).observe(this.card);
-    }
+(function initBorderDraw() {
+  const svg  = document.getElementById('borderSVG');
+  const rect = document.getElementById('borderRect');
+  const card = document.getElementById('passwordCard');
+  if (!svg || !rect || !card) return;
+
+  function build() {
+    const W  = card.offsetWidth;
+    const H  = card.offsetHeight;
+    const rx = 32;
+    const perim = 2 * (W - 2*rx) + 2 * (H - 2*rx) + 2 * Math.PI * rx;
+    svg.setAttribute('width',  W);
+    svg.setAttribute('height', H);
+    rect.setAttribute('x',      1);
+    rect.setAttribute('y',      1);
+    rect.setAttribute('width',  W - 2);
+    rect.setAttribute('height', H - 2);
+    rect.setAttribute('rx',     rx);
+    rect.style.strokeDasharray  = perim;
+    svg.style.setProperty('--bd-perim', perim + 'px');
   }
 
-  // {x,y} sobre el borde interno, t ∈ [0,1)
-  point(t) {
-    const { W, H, INSET: P, RADIUS: r } = this;
-    const sW = (W-2*P)-2*r, sH = (H-2*P)-2*r;
-    const cLen = Math.PI/2*r;
-    const total = 2*(sW+sH)+4*cLen;
-    let d = (((t%1)+1)%1)*total;
-    if (d < sW) return { x: P+r+d, y: P };
-    d -= sW;
-    if (d < cLen) { const a=d/r; return { x: W-P-r+Math.sin(a)*r, y: P+r-Math.cos(a)*r }; }
-    d -= cLen;
-    if (d < sH)  return { x: W-P, y: P+r+d };
-    d -= sH;
-    if (d < cLen) { const a=d/r; return { x: W-P-r+Math.cos(a)*r, y: H-P-r+Math.sin(a)*r }; }
-    d -= cLen;
-    if (d < sW)  return { x: W-P-r-d, y: H-P };
-    d -= sW;
-    if (d < cLen) { const a=d/r; return { x: P+r-Math.sin(a)*r, y: H-P-r+Math.cos(a)*r }; }
-    d -= cLen;
-    if (d < sH)  return { x: P, y: H-P-r-d };
-    d -= sH;
-    const a=d/r; return { x: P+r-Math.cos(a)*r, y: P+r-Math.sin(a)*r };
+  requestAnimationFrame(build);
+  if (window.ResizeObserver) {
+    new ResizeObserver(() => requestAnimationFrame(build)).observe(card);
   }
-
-  build() {
-    this.W = this.card.offsetWidth;
-    this.H = this.card.offsetHeight;
-    if (!this.W) return;
-    const { W, H, INSET: P, RADIUS: r, SPACING, DURATION: D } = this;
-
-    this.svg.setAttribute('width',   W);
-    this.svg.setAttribute('height',  H);
-    this.svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
-
-    const perim = 2*((W-2*P-2*r)+(H-2*P-2*r))+2*Math.PI*r;
-    const n = Math.floor(perim / SPACING);
-    let dots = '';
-    for (let i = 0; i < n; i++) {
-      const p = this.point(i / n);
-      const x = p.x.toFixed(2), y = p.y.toFixed(2);
-      // El delay hace que el pico de brillo viaje de puntito en puntito
-      const delay = ((i/n)*D - D/2).toFixed(3) + 's';
-      // Puntito base: siempre visible, dorado suave
-      dots += `<circle cx="${x}" cy="${y}" r="2" fill="#C9A84C" opacity="0.60"/>`;
-      // Puntito activo: parpadea con la onda (CSS keyframe definido en style.css)
-      dots += `<circle cx="${x}" cy="${y}" r="3.5" fill="#D4A843" opacity="0" filter="url(#mq_glow)" style="animation:marqWavePulse ${D}s linear ${delay} infinite"/>`;
-    }
-
-    this.svg.innerHTML = `
-      <defs>
-        <filter id="mq_glow" x="-120%" y="-120%" width="340%" height="340%">
-          <feGaussianBlur in="SourceGraphic" stdDeviation="3.5" result="b"/>
-          <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
-        </filter>
-        <clipPath id="mq_clip">
-          <rect x="0" y="0" width="${W}" height="${H}" rx="32" ry="32"/>
-        </clipPath>
-      </defs>
-      <g clip-path="url(#mq_clip)">${dots}</g>
-    `;
-  }
-
-  resize() { this.build(); }
-
-  intensify() {
-    this.DURATION = 2;
-    this.build();
-  }
-}
-
-const marquee = new BorderMarquee();
-window.addEventListener('resize', () => marquee.resize());
+})();
 
 /* ============================================
    CONTRASEÑA
    ============================================ */
 const CLAVE_CORRECTA = 'Micurita04';
+let claveVisible = false;
 
 function checkPassword() {
   const input    = document.getElementById('passwordInput');
   const errorBox = document.getElementById('errorBox');
-  const val      = input.value.trim();
+  const reveal   = document.getElementById('keyReveal');
+  const btnText  = document.getElementById('openBtnText');
 
+  if (!claveVisible) {
+    claveVisible = true;
+    reveal.classList.add('open');
+    setTimeout(() => input.focus(), 450);
+    btnText.textContent = 'Confirmar';
+    return;
+  }
+
+  const val = input.value.trim();
   if (val === CLAVE_CORRECTA) {
     errorBox.classList.add('hidden');
     if (!musicaActiva) startMusic();
@@ -263,12 +297,10 @@ function checkPassword() {
     input.classList.remove('shake');
     void input.offsetWidth;
     input.classList.add('shake');
-
     errorBox.classList.remove('hidden');
     errorBox.style.animation = 'none';
     void errorBox.offsetWidth;
     errorBox.style.animation = '';
-
     lanzarDestellosDorados(document.getElementById('openBtn'), 6);
   }
 }
@@ -281,7 +313,7 @@ document.getElementById('passwordInput').addEventListener('keydown', e => {
    DESBLOQUEO — SECUENCIA COMPLETA
    ============================================ */
 function unlockPage() {
-  const heart  = document.getElementById('mainHeart');
+  const heart  = document.querySelector('.rose-icon');
   const card   = document.getElementById('passwordCard');
   const screen = document.getElementById('passwordScreen');
   const btn    = document.getElementById('openBtn');
@@ -294,8 +326,9 @@ function unlockPage() {
   lanzarCorazones(btn, 22);
   lanzarDestellosDorados(btn, 24);
 
-  // Marco acelera
-  marquee.intensify();
+  // Marco se oculta inmediatamente al desbloquear
+  const borderSVG = document.getElementById('borderSVG');
+  if (borderSVG) borderSVG.style.opacity = '0';
 
   // Tarjeta se abre
   setTimeout(() => { card.classList.add('opening'); }, 900);
@@ -340,7 +373,7 @@ function mostrarOverlayVoz() {
       main.classList.add('unfurl');
       setTimeout(initLetterBody, 800);
     }, 650);
-  }, 4800);
+  }, 7500);
 }
 
 /* ============================================
@@ -375,11 +408,22 @@ let musicaActiva = false;
 const bgMusic  = document.getElementById('bgMusic');
 const musicBtn = document.getElementById('musicToggle');
 
+function hideHint() {
+  const hint = document.getElementById('musicHint');
+  if (hint) hint.classList.add('hide');
+}
+
+function hintStartMusic() {
+  hideHint();
+  if (!musicaActiva) startMusic();
+}
+
 function startMusic() {
   bgMusic.play().then(() => {
     musicaActiva = true;
     musicBtn.classList.add('playing');
     musicBtn.setAttribute('aria-label', 'Desactivar música');
+    hideHint();
   }).catch(() => {});
 }
 
@@ -481,137 +525,185 @@ El que siempre va a elegirte.`;
 
 function initLetterBody() {
   const el = document.getElementById('letterText');
-  el.innerHTML = TEXTO_PERDON.trim().split('\n\n').map(p => `<p>${p.replace(/\n/g,'<br/>')}</p>`).join('');
+  if (!el) return;
+  el.innerHTML = TEXTO_PERDON.trim().replace(/\n\n/g, '<br><br>').replace(/\n/g, '<br>');
 }
 
 /* ── Ogro guardián ── */
-let ogroClicks = 0;
-const OGRO_MSGS = [
-  '¡Alto! Esta carta no se abre sin cariño 💗',
-  'Aún no sientes el amor adecuado para abrir la carta... 💔',
-  'Ya casi lo logras, pero aún te falta un poco más... 💛',
-  'Está bien... confiaré en ti 💗'
+let ogroStep = 0;
+let ogroTriggered = false;
+
+const OGRO_PREGUNTAS = [
+  '¿Está dispuesta a perdonar aunque le duela? 💔',
+  '¿Piensa en él incluso cuando no quiere? 💭',
+  '¿Lo extraña aunque esté enojada con él? 😤❤️'
+];
+const OGRO_RESPUESTAS_MAL = [
+  '¡Mentira! ¡Los que aman no dudan tanto! 😡',
+  '¡No te creo! ¡Vuelve cuando seas honesta! 😠',
+  '¡Eso no me convence! ¡Piénsalo bien! 😤'
+];
+const OGRO_RESPUESTAS_BIEN = [
+  'Mmm... tal vez... ¡pero no te confíes! Aún me quedan preguntas 😒',
+  'Hmph... eso es algo... ¡pero falta una más! 😤',
+  'Está bien, está bien... supongo que sí lo amas de verdad 💛\n¡Pero como le hagas daño, vuelvo! 👊'
 ];
 
 (function initOgro() {
   const section = document.getElementById('letterSection');
   const wrap    = document.getElementById('ogroGuardian');
   if (!section || !wrap) return;
-  let triggered = false;
 
   const observer = new IntersectionObserver(entries => {
-    if (triggered) return;
+    if (ogroTriggered) return;
     if (entries[0].isIntersecting) {
-      triggered = true;
+      ogroTriggered = true;
       observer.disconnect();
       wrap.classList.remove('ogro-hidden');
       wrap.classList.add('ogro-visible');
-      setTimeout(() => wrap.classList.add('ogro-side'), 2800);
+      // Mostrar primera pregunta después de que el ogro aparece
+      setTimeout(() => ogroMostrarPregunta(), 1400);
     }
-  }, { threshold: 0.45 });
+  }, { threshold: 0.35 });
 
   observer.observe(section);
 })();
 
-function ogroShake() {
+function ogroBubbleSet(texto) {
+  const bubble = document.getElementById('ogroBubble');
+  if (!bubble) return;
+  bubble.style.animation = 'none';
+  void bubble.offsetWidth;
+  bubble.textContent = texto;
+  bubble.style.animation = '';
+}
+
+function ogroMostrarPregunta() {
+  const box = document.getElementById('ogroQuestionBox');
+  const q   = document.getElementById('ogroQuestion');
+  if (!box || !q) return;
+  q.textContent = OGRO_PREGUNTAS[ogroStep];
+  box.classList.remove('hidden');
+}
+
+function ogroAnswer(isYes) {
   const wrap = document.getElementById('ogroGuardian');
-  if (!wrap) return;
-  wrap.classList.remove('ogro-shake');
-  void wrap.offsetWidth;
-  wrap.classList.add('ogro-shake');
-  wrap.addEventListener('animationend', () => wrap.classList.remove('ogro-shake'), { once: true });
+  const box  = document.getElementById('ogroQuestionBox');
+  if (!wrap || wrap.classList.contains('ogro-bye')) return;
+
+  // Desactivar botones durante la reacción
+  wrap.querySelectorAll('.ogro-btn').forEach(b => b.disabled = true);
+
+  if (!isYes) {
+    // Respuesta incorrecta — ogro se enoja
+    vibrar([40, 20, 40]);
+    ogroBubbleSet(OGRO_RESPUESTAS_MAL[ogroStep] || '¡No me convences! 😡');
+    wrap.classList.remove('ogro-shake');
+    void wrap.offsetWidth;
+    wrap.classList.add('ogro-shake');
+    wrap.addEventListener('animationend', () => {
+      wrap.classList.remove('ogro-shake');
+      wrap.querySelectorAll('.ogro-btn').forEach(b => b.disabled = false);
+    }, { once: true });
+    return;
+  }
+
+  // Respuesta correcta
+  vibrar([20]);
+  ogroBubbleSet(OGRO_RESPUESTAS_BIEN[ogroStep]);
+  box.classList.add('hidden');
+  ogroStep++;
+
+  if (ogroStep < OGRO_PREGUNTAS.length) {
+    // Siguiente pregunta
+    setTimeout(() => {
+      ogroMostrarPregunta();
+      wrap.querySelectorAll('.ogro-btn').forEach(b => b.disabled = false);
+    }, 1800);
+  } else {
+    // Superó todas — ogro cede, más tiempo para leer el mensaje final
+    setTimeout(() => ogroBye(), 4200);
+  }
 }
 
 function ogroBye() {
   const wrap     = document.getElementById('ogroGuardian');
   const sparkles = document.getElementById('ogroSparkles');
   if (!wrap || wrap.classList.contains('ogro-bye')) return;
-  wrap.classList.remove('ogro-side');
   const emojis = ['✨','💛','💗','⭐','💖'];
-  for (let i = 0; i < 8; i++) {
+  for (let i = 0; i < 10; i++) {
     const sp = document.createElement('span');
     sp.className   = 'ogro-sp';
     sp.textContent = emojis[Math.floor(Math.random() * emojis.length)];
-    sp.style.left  = (20 + Math.random() * 60) + '%';
+    sp.style.left  = (15 + Math.random() * 70) + '%';
     sp.style.top   = (10 + Math.random() * 70) + '%';
-    sp.style.setProperty('--sx', (Math.random() * 60 - 30) + 'px');
-    sp.style.setProperty('--sy', -(30 + Math.random() * 50) + 'px');
-    sp.style.animationDelay = (Math.random() * 0.3) + 's';
+    sp.style.setProperty('--sx', (Math.random() * 70 - 35) + 'px');
+    sp.style.setProperty('--sy', -(30 + Math.random() * 60) + 'px');
+    sp.style.animationDelay = (Math.random() * 0.4) + 's';
     sparkles.appendChild(sp);
   }
-  setTimeout(() => wrap.classList.add('ogro-bye'), 800);
+  setTimeout(() => {
+    wrap.classList.add('ogro-bye');
+    // Revelar carta sellada donde estaba el ogro
+    setTimeout(() => {
+      const sealed = document.getElementById('sealedLetter');
+      const hint   = document.getElementById('slHintAbove');
+      if (hint)   hint.classList.remove('hidden');
+      if (sealed) sealed.classList.remove('hidden');
+    }, 500);
+  }, 600);
 }
 
-function toggleLetter(btn) {
-  const body    = document.getElementById('letterBody');
-  const wrap    = document.getElementById('ogroGuardian');
-  const bubble  = document.getElementById('ogroBubble');
-  const isOpen  = btn.classList.contains('open');
+function openSealedLetter(el) {
+  if (el.classList.contains('open')) return;
+  el.classList.add('open');
 
-  if (isOpen) {
-    btn.classList.remove('open');
-    btn.setAttribute('aria-expanded', 'false');
-    body.style.maxHeight = '0';
-    return;
-  }
+  // Ocultar la carta sellada y el label superior
+  setTimeout(() => {
+    el.style.display = 'none';
+    const hint = document.getElementById('slHintAbove');
+    if (hint) hint.style.display = 'none';
+  }, 300);
 
-  const ogroGone = !wrap || wrap.classList.contains('ogro-bye');
-
-  if (!ogroGone) {
-    ogroClicks++;
-    vibrar([30, 20]);
-
-    if (ogroClicks < 3) {
-      if (bubble) {
-        bubble.style.animation = 'none';
-        bubble.offsetWidth;
-        bubble.textContent = OGRO_MSGS[ogroClicks];
-        bubble.style.animation = '';
-      }
-      ogroShake();
-      // Movimiento continuo durante 2 s
-      const img = wrap ? wrap.querySelector('.ogro-img') : null;
-      if (img) {
-        img.classList.add('ogro-react');
-        setTimeout(() => img.classList.remove('ogro-react'), 2000);
-      }
-      return;
-    }
-
-    // 3er click — el ogro cede
-    if (bubble) {
-      bubble.style.animation = 'none';
-      bubble.offsetWidth;
-      bubble.textContent = OGRO_MSGS[3];
-      bubble.style.animation = '';
-    }
-    ogroBye();
+  const body = document.getElementById('letterBody');
+  if (body) {
     setTimeout(() => {
-      btn.classList.add('open');
-      btn.setAttribute('aria-expanded', 'true');
-      body.style.maxHeight = body.scrollHeight + 36 + 'px';
-      lanzarCorazones(btn, 7);
-      vibrar([25]);
-    }, 3500);
-    return;
+      body.style.maxHeight = body.scrollHeight + 80 + 'px';
+    }, 350);
   }
-
-  btn.classList.add('open');
-  btn.setAttribute('aria-expanded', 'true');
-  body.style.maxHeight = body.scrollHeight + 36 + 'px';
-  lanzarCorazones(btn, 7);
+  lanzarCorazones(el, 7);
   vibrar([25]);
 }
 
+function closeLetter() {
+  const sealed = document.getElementById('sealedLetter');
+  const hint   = document.getElementById('slHintAbove');
+  const body   = document.getElementById('letterBody');
+
+  if (body) body.style.maxHeight = '0';
+
+  setTimeout(() => {
+    if (sealed) { sealed.classList.remove('open'); sealed.style.display = ''; }
+    if (hint)   hint.style.display = '';
+  }, 420);
+
+  vibrar([20]);
+}
+
 /* ============================================
-   FRASES OCULTAS — TAP TO REVEAL
+   PROMESAS SELLADAS
    ============================================ */
-function revealPhrase(el) {
-  if (el.classList.contains('revealed')) return;
-  el.classList.add('revealed');
-  vibrar([30]);
-  lanzarCorazones(el, 8);
-  lanzarDestellosDorados(el, 6);
+function revealPromise(el) {
+  if (el.classList.contains('open') || el.classList.contains('breaking')) return;
+  el.classList.add('breaking');
+  vibrar([40, 20, 60]);
+  // Esperar a que el candado se rompa, luego abrir
+  setTimeout(() => {
+    el.classList.add('open');
+    el.querySelector('.promise-content')?.classList.remove('hidden');
+    lanzarCorazones(el, 10);
+    lanzarDestellosDorados(el, 8);
+  }, 420);
 }
 
 /* ============================================
