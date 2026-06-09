@@ -40,6 +40,7 @@ window.addEventListener('load', () => {
 });
 
 function startExperience() {
+  playBtnSfx();
   const startScreen = document.getElementById('startScreen');
   const magicIntro  = document.getElementById('magicIntro');
 
@@ -300,6 +301,8 @@ const CLAVE_CORRECTA = ''; // contraseña desactivada temporalmente
 let claveVisible = false;
 
 function checkPassword() {
+  playBtnSfx();
+  if (!musicaActiva) startMusic();
   const input    = document.getElementById('passwordInput');
   const errorBox = document.getElementById('errorBox');
   const reveal   = document.getElementById('keyReveal');
@@ -472,18 +475,14 @@ function toggleMusic() {
 }
 
 bgMusic.volume = 0.5;
-// Intentar autoplay inmediato
-startMusic();
-// Si el navegador lo bloqueó, arrancar en el primer gesto (touchstart captura antes que click)
-const _unlockMusic = () => {
-  if (!musicaActiva) startMusic();
-  document.removeEventListener('touchstart', _unlockMusic, true);
-  document.removeEventListener('mousedown',  _unlockMusic, true);
-  document.removeEventListener('keydown',    _unlockMusic, true);
-};
-document.addEventListener('touchstart', _unlockMusic, { capture: true, once: true, passive: true });
-document.addEventListener('mousedown',  _unlockMusic, { capture: true, once: true });
-document.addEventListener('keydown',    _unlockMusic, { capture: true, once: true });
+
+function playBtnSfx() {
+  const sfx = document.getElementById('btnSfx');
+  if (!sfx) return;
+  sfx.volume = 1.0;
+  sfx.currentTime = 0;
+  sfx.play().catch(() => {});
+}
 
 /* ============================================
    HELPERS — VIBRAR, CORAZONES, DESTELLOS
@@ -715,6 +714,7 @@ function ogroBye() {
 function openSealedLetter(el) {
   if (el.classList.contains('open')) return;
   el.classList.add('open');
+  playBtnSfx();
 
   // Ocultar la carta sellada y el label superior
   setTimeout(() => {
