@@ -481,7 +481,7 @@ const _unlockMusic = () => {
   document.removeEventListener('mousedown',  _unlockMusic, true);
   document.removeEventListener('keydown',    _unlockMusic, true);
 };
-document.addEventListener('touchstart', _unlockMusic, { capture: true, once: true });
+document.addEventListener('touchstart', _unlockMusic, { capture: true, once: true, passive: true });
 document.addEventListener('mousedown',  _unlockMusic, { capture: true, once: true });
 document.addEventListener('keydown',    _unlockMusic, { capture: true, once: true });
 
@@ -726,7 +726,7 @@ function openSealedLetter(el) {
   const body = document.getElementById('letterBody');
   if (body) {
     setTimeout(() => {
-      body.style.maxHeight = body.scrollHeight + 80 + 'px';
+      body.style.maxHeight = '3000px';
     }, 350);
   }
   lanzarCorazones(el, 7);
@@ -764,7 +764,7 @@ function closeLetter() {
 /* ============================================
    LAS LLAVES DE MI CORAZÓN
    ============================================ */
-const HORA_LLAVE_TIEMPO = 20;       // 8:00 p.m. — editable
+// HORA_LLAVE_TIEMPO reemplazada por TimeKey (datetime configurable + video sorpresa)
 const PALABRA_SECRETA   = 'Micurita'; // palabra secreta — editable
 
 const keysState = { time: false, photo: false, music: false, secret: false };
@@ -806,27 +806,347 @@ function checkAllKeysUnlocked() {
   }, 700);
 }
 
-/* Llave 1 — Tiempo */
-function initTimeKey() {
-  const check = () => {
-    if (keysState.time) return;
-    if (new Date().getHours() >= HORA_LLAVE_TIEMPO) unlockKey('time');
+/* ============================================
+   BASE DE DATOS COMPARTIDA (IndexedDB)
+   ============================================ */
+const MicuDB = (() => {
+  let _db = null;
+  function open() {
+    return new Promise((res, rej) => {
+      if (_db) { res(_db); return; }
+      const r = indexedDB.open('MicuritaDB', 2);
+      r.onupgradeneeded = e => {
+        const db = e.target.result;
+        ['videos','photos'].forEach(s => {
+          if (!db.objectStoreNames.contains(s)) db.createObjectStore(s);
+        });
+      };
+      r.onsuccess = e => { _db = e.target.result; res(_db); };
+      r.onerror   = () => rej(r.error);
+    });
+  }
+  return {
+    put(store, key, val) {
+      return open().then(db => new Promise((res, rej) => {
+        const tx = db.transaction(store, 'readwrite');
+        const r  = tx.objectStore(store).put(val, key);
+        r.onsuccess = () => res(); r.onerror = () => rej(r.error);
+      }));
+    },
+    get(store, key) {
+      return open().then(db => new Promise((res, rej) => {
+        const tx = db.transaction(store, 'readonly');
+        const r  = tx.objectStore(store).get(key);
+        r.onsuccess = () => res(r.result || null); r.onerror = () => rej(r.error);
+      }));
+    }
   };
-  check();
-  setInterval(check, 60000);
-}
+})();
 
-/* Llave 2 — Foto */
-function handlePhotoUpload(input) {
-  if (!input.files || !input.files[0]) return;
-  const reader = new FileReader();
-  reader.onload = e => {
-    const img = document.getElementById('photoPreview');
-    if (img) img.src = e.target.result;
+/* ============================================
+   LLAVE DEL TIEMPO — EXPERIENCIA DE VIDEO
+   ============================================ */
+const TimeKey = (() => {
+  const VID_KEY = 'timekey';
+  const LS_DT   = 'kt_unlock_dt';
+
+  let _blobUrl = null;
+  let _ivl     = null;
+  let _open    = false;
+
+  function saveBlob(blob) { return MicuDB.put('videos', VID_KEY, blob); }
+  function loadBlob()     { return MicuDB.get('videos', VID_KEY); }
+
+  /* ── Unlock time ── */
+  function getUnlockDT() {
+    const s = localStorage.getItem(LS_DT);
+    return s ? new Date(s) : null;
+  }
+  function isUnlocked() {
+    const dt = getUnlockDT();
+    return !!(dt && new Date() >= dt);
+  }
+
+  /* ── UI helpers ── */
+  function updateTimeLabel() {
+    const el = document.getElementById('ktTimeLabel');
+    if (!el) return;
+    const dt = getUnlockDT();
+    if (!dt) { el.textContent = ''; return; }
+    const d = dt.toLocaleDateString('es-ES', { day:'2-digit', month:'2-digit', year:'numeric' });
+    const t = dt.toLocaleTimeString('es-ES', { hour:'2-digit', minute:'2-digit' });
+    el.textContent = 'Se abrirá el ' + d + ' a las ' + t;
+  }
+  function preloadDatetimeInput() {
+    const el = document.getElementById('ktDatetimeInput');
+    if (!el) return;
+    const s = localStorage.getItem(LS_DT);
+    if (!s) return;
+    const dt  = new Date(s);
+    const pad = n => String(n).padStart(2, '0');
+    el.value  = dt.getFullYear() + '-' + pad(dt.getMonth()+1) + '-' + pad(dt.getDate())
+              + 'T' + pad(dt.getHours()) + ':' + pad(dt.getMinutes());
+  }
+
+  /* ── Public: setUnlockDateTime ── */
+  function setUnlockDateTime(value) {
+    if (!value) return;
+    localStorage.setItem(LS_DT, new Date(value).toISOString());
+    updateTimeLabel();
+    if (isUnlocked() && !keysState.time) _triggerUnlock();
+  }
+
+  /* ── Public: handleVideoUpload ── */
+  function handleVideoUpload(input) {
+    const file = input.files && input.files[0];
+    if (!file) return;
+    const errEl  = document.getElementById('ktVideoErr');
+    const tmpUrl = URL.createObjectURL(file);
+    const tmpVid = document.createElement('video');
+    tmpVid.preload = 'metadata';
+    tmpVid.onloadedmetadata = () => {
+      URL.revokeObjectURL(tmpUrl);
+      if (tmpVid.duration > 120) {
+        if (errEl) errEl.classList.remove('hidden');
+        input.value = '';
+        return;
+      }
+      if (errEl) errEl.classList.add('hidden');
+      saveBlob(file).then(() => {
+        if (_blobUrl) URL.revokeObjectURL(_blobUrl);
+        _blobUrl = URL.createObjectURL(file);
+        const st = document.getElementById('ktVideoStatus');
+        if (st) st.textContent = 'Video cargado';
+      }).catch(e => console.warn('TimeKey: saveBlob error', e));
+    };
+    tmpVid.src = tmpUrl;
+  }
+
+  /* ── Public: toggleConfig ── */
+  function toggleConfig() {
+    const panel = document.getElementById('ktConfigPanel');
+    if (!panel) return;
+    const hiding = !panel.classList.contains('hidden');
+    panel.classList.toggle('hidden');
+    if (!hiding) panel.style.animation = 'ktPanelIn 0.22s ease both';
+  }
+
+  /* ── Public: openModal ── */
+  function openModal() {
+    if (_open) return;
+    if (!_blobUrl) {
+      const panel = document.getElementById('ktConfigPanel');
+      if (panel) { panel.classList.remove('hidden'); }
+      return;
+    }
+    _open = true;
+    const modal  = document.getElementById('ktModal');
+    const reveal = document.getElementById('ktRevealScreen');
+    const wrap   = document.getElementById('ktVideoWrap');
+    const video  = document.getElementById('ktVideo');
+    if (!modal) return;
+
+    // Reset reveal animations
+    ['kt-reveal-icon','kt-reveal-line1','kt-reveal-line2'].forEach(cls => {
+      const el = modal.querySelector('.' + cls);
+      if (!el) return;
+      el.style.animation = 'none';
+      void el.offsetHeight;
+      el.style.animation = '';
+    });
+
+    reveal.classList.remove('hidden');
+    wrap.classList.add('hidden');
+    video.src = '';
+
+    modal.classList.remove('hidden');
+    void modal.offsetHeight;
+    modal.classList.add('kt-visible');
+    document.body.style.overflow = 'hidden';
+
+    // After reveal text, transition to video
+    setTimeout(() => {
+      if (!_open) return;
+      reveal.style.transition = 'opacity 0.38s ease';
+      reveal.style.opacity    = '0';
+      setTimeout(() => {
+        if (!_open) return;
+        reveal.classList.add('hidden');
+        reveal.style.opacity    = '';
+        reveal.style.transition = '';
+        video.src = _blobUrl;
+        wrap.style.opacity    = '0';
+        wrap.style.transition = 'opacity 0.38s ease';
+        wrap.classList.remove('hidden');
+        void wrap.offsetHeight;
+        wrap.style.opacity = '1';
+        setTimeout(() => {
+          wrap.style.opacity    = '';
+          wrap.style.transition = '';
+          video.play().catch(() => {});
+        }, 400);
+      }, 380);
+    }, 2700);
+  }
+
+  /* ── Public: closeModal ── */
+  function closeModal() {
+    if (!_open) return;
+    _open = false;
+    const modal = document.getElementById('ktModal');
+    const video = document.getElementById('ktVideo');
+    if (video) { video.pause(); video.src = ''; }
+    if (modal) {
+      modal.classList.remove('kt-visible');
+      setTimeout(() => modal.classList.add('hidden'), 300);
+    }
+    document.body.style.overflow = '';
+  }
+
+  /* ── Internal: trigger unlock ── */
+  function _triggerUnlock() {
+    const pill = document.getElementById('ktStatusPill');
+    if (pill) { pill.textContent = 'Recuerdo disponible'; pill.classList.add('ready'); }
+    unlockKey('time');
+    if (_ivl) { clearInterval(_ivl); _ivl = null; }
+  }
+
+  /* ── Public: init ── */
+  function init() {
+    preloadDatetimeInput();
+    updateTimeLabel();
+    loadBlob().then(blob => {
+      if (!blob) return;
+      if (_blobUrl) URL.revokeObjectURL(_blobUrl);
+      _blobUrl = URL.createObjectURL(blob);
+      const st = document.getElementById('ktVideoStatus');
+      if (st) st.textContent = 'Video cargado';
+    }).catch(() => {});
+
+    if (isUnlocked()) { _triggerUnlock(); return; }
+
+    if (_ivl) clearInterval(_ivl);
+    _ivl = setInterval(() => {
+      if (keysState.time) { clearInterval(_ivl); _ivl = null; return; }
+      if (isUnlocked()) _triggerUnlock();
+    }, 30000);
+  }
+
+  return { init, openModal, closeModal, handleVideoUpload, setUnlockDateTime, toggleConfig };
+})();
+
+/* ============================================
+   LLAVE DE TU SONRISA — EXPERIENCIA DE FOTO
+   ============================================ */
+const PhotoKey = (() => {
+  const PHOTO_K = 'smilekey';
+  const LS_DONE = 'kp_unlocked';
+
+  let _blobUrl = null;
+  let _open    = false;
+
+  function saveBlob(blob) { return MicuDB.put('photos', PHOTO_K, blob); }
+  function loadBlob()     { return MicuDB.get('photos', PHOTO_K); }
+
+  /* ── Mostrar foto en el marco ── */
+  function showPhoto(url) {
+    const ph  = document.getElementById('kpPlaceholder');
+    const img = document.getElementById('kpPhoto');
+    if (ph)  ph.style.display = 'none';
+    if (!img) return;
+    img.src = url;
+    img.style.display = '';
+    img.style.animation = 'none';
+    void img.offsetHeight;
+    img.style.animation = '';
+  }
+
+  /* ── Animación de escaneo → desbloqueo ── */
+  function startScan() {
+    const pill  = document.getElementById('kpStatusPill');
+    const frame = document.getElementById('kpFrame');
+    const label = document.getElementById('kpBtnUpload');
+    if (pill)  { pill.textContent = 'Leyendo sonrisa…'; pill.classList.add('kp-pill-scanning'); }
+    if (frame) frame.classList.add('kp-scanning');
+    if (label) label.style.pointerEvents = 'none';
+
+    setTimeout(() => {
+      if (frame) { frame.classList.remove('kp-scanning'); frame.classList.add('kp-frame-unlocked'); }
+      localStorage.setItem(LS_DONE, '1');
+      _triggerUnlock();
+    }, 2800);
+  }
+
+  function _triggerUnlock() {
+    const pill = document.getElementById('kpStatusPill');
+    if (pill) {
+      pill.textContent = 'Sonrisa detectada';
+      pill.classList.remove('kp-pill-scanning');
+      pill.classList.add('kp-pill-ready');
+    }
     unlockKey('photo');
-  };
-  reader.readAsDataURL(input.files[0]);
-}
+  }
+
+  /* ── Public: handleUpload ── */
+  function handleUpload(input) {
+    const file = input.files && input.files[0];
+    if (!file) return;
+    saveBlob(file).then(() => {
+      if (_blobUrl) URL.revokeObjectURL(_blobUrl);
+      _blobUrl = URL.createObjectURL(file);
+      showPhoto(_blobUrl);
+      startScan();
+    }).catch(() => {
+      if (_blobUrl) URL.revokeObjectURL(_blobUrl);
+      _blobUrl = URL.createObjectURL(file);
+      showPhoto(_blobUrl);
+      startScan();
+    });
+  }
+
+  /* ── Public: openModal ── */
+  function openModal() {
+    if (_open) return;
+    _open = true;
+    const modal = document.getElementById('kpModal');
+    const mImg  = document.getElementById('kpModalPhoto');
+    if (mImg && _blobUrl) mImg.src = _blobUrl;
+    if (!modal) return;
+    modal.classList.remove('hidden');
+    void modal.offsetHeight;
+    modal.classList.add('kp-visible');
+    document.body.style.overflow = 'hidden';
+    const box = modal.querySelector('.kp-modal-box');
+    if (box) setTimeout(() => lanzarCorazones(box, 7), 400);
+  }
+
+  /* ── Public: closeModal ── */
+  function closeModal() {
+    if (!_open) return;
+    _open = false;
+    const modal = document.getElementById('kpModal');
+    if (modal) {
+      modal.classList.remove('kp-visible');
+      setTimeout(() => modal.classList.add('hidden'), 280);
+    }
+    document.body.style.overflow = '';
+  }
+
+  /* ── Public: init ── */
+  function init() {
+    loadBlob().then(blob => {
+      if (!blob) return;
+      if (_blobUrl) URL.revokeObjectURL(_blobUrl);
+      _blobUrl = URL.createObjectURL(blob);
+      showPhoto(_blobUrl);
+      const frame = document.getElementById('kpFrame');
+      if (frame) frame.classList.add('kp-frame-unlocked');
+      if (localStorage.getItem(LS_DONE)) _triggerUnlock();
+    }).catch(() => {});
+  }
+
+  return { init, handleUpload, openModal, closeModal };
+})();
 
 /* Llave 3 — Música (llamada desde startMusic) */
 function unlockMusicKey() { unlockKey('music'); }
@@ -850,7 +1170,8 @@ function checkSecretWord() {
   }
 }
 document.addEventListener('DOMContentLoaded', () => {
-  initTimeKey();
+  TimeKey.init();
+  PhotoKey.init();
   document.getElementById('secretWordInput')?.addEventListener('keydown', e => {
     if (e.key === 'Enter') checkSecretWord();
   });

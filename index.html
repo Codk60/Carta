@@ -150,27 +150,27 @@
       <h2 class="section-title">✦ Nuestros momentos</h2>
       <div class="polaroid-grid">
         <div class="polaroid" style="--rot:-4deg;--delay:0s">
-          <div class="polaroid-photo grad-1"><img src="img/02.jpeg" alt=""/><span class="ph-emoji">🌸</span></div>
+          <div class="polaroid-photo grad-1"><img src="img/02.jpeg" alt="" loading="lazy"/><span class="ph-emoji">🌸</span></div>
           <p class="polaroid-caption">Contigo todo es mejor</p>
         </div>
         <div class="polaroid" style="--rot:3deg;--delay:0.1s">
-          <div class="polaroid-photo grad-2"><img src="img/05.jpeg" alt=""/><span class="ph-emoji">💕</span></div>
+          <div class="polaroid-photo grad-2"><img src="img/05.jpeg" alt="" loading="lazy"/><span class="ph-emoji">💕</span></div>
           <p class="polaroid-caption">Mi lugar favorito</p>
         </div>
         <div class="polaroid" style="--rot:-2deg;--delay:0.2s">
-          <div class="polaroid-photo grad-3"><img src="img/WhatsApp Image 2026-06-07 at 2.11.26 PM.jpeg" alt=""/><span class="ph-emoji">✨</span></div>
+          <div class="polaroid-photo grad-3"><img src="img/WhatsApp Image 2026-06-07 at 2.11.26 PM.jpeg" alt="" loading="lazy"/><span class="ph-emoji">✨</span></div>
           <p class="polaroid-caption">El 04 y todo lo demás</p>
         </div>
         <div class="polaroid" style="--rot:4deg;--delay:0.3s">
-          <div class="polaroid-photo grad-1"><img src="img/foto4.jpeg" alt=""/><span class="ph-emoji">🌹</span></div>
+          <div class="polaroid-photo grad-1"><img src="img/foto4.jpeg" alt="" loading="lazy"/><span class="ph-emoji">🌹</span></div>
           <p class="polaroid-caption">Siempre tú</p>
         </div>
         <div class="polaroid" style="--rot:-3deg;--delay:0.4s">
-          <div class="polaroid-photo grad-2"><img src="img/foto5.jpeg" alt=""/><span class="ph-emoji">💖</span></div>
+          <div class="polaroid-photo grad-2"><img src="img/foto5.jpeg" alt="" loading="lazy"/><span class="ph-emoji">💖</span></div>
           <p class="polaroid-caption">Mis ojos favoritos</p>
         </div>
         <div class="polaroid" style="--rot:2deg;--delay:0.5s">
-          <div class="polaroid-photo grad-3"><img src="img/foto6.jpeg" alt=""/><span class="ph-emoji">🌸</span></div>
+          <div class="polaroid-photo grad-3"><img src="img/foto6.jpeg" alt="" loading="lazy"/><span class="ph-emoji">🌸</span></div>
           <p class="polaroid-caption">Tú y yo, siempre</p>
         </div>
       </div>
@@ -215,7 +215,13 @@
     <section class="section kl-section" id="keysSection">
       <img src="img/001.png" class="kl-header-img" alt="" draggable="false"/>
       <h2 class="section-title">✦ Las llaves de mi corazón</h2>
-      <p class="keys-subtitle">No todo se abre con un botón.<br>Algunas cosas necesitan una sonrisa,<br>una canción y una palabra que solo tú y yo sabemos.</p>
+      <div class="kl-peka-header">
+        <img src="img/peka.png" class="kl-peka-img" alt="" draggable="false" loading="lazy"/>
+        <div class="kl-peka-overlay"></div>
+        <div class="kl-peka-text">
+          <p class="keys-subtitle">No todo se abre con un botón.<br>Algunas cosas necesitan una sonrisa,<br>una canción y una palabra que solo tú y yo sabemos.</p>
+        </div>
+      </div>
 
       <div class="kl-timeline">
 
@@ -227,29 +233,63 @@
           </div>
           <div class="kl-card locked" id="key-time">
             <div class="kl-card-top">
-              <div class="kl-icon-circle">
-                <svg viewBox="0 0 24 24" fill="none" stroke="#D81B60" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg>
+              <div class="kl-icon-circle kt-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#C2185B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg>
               </div>
               <div class="kl-info">
                 <div class="kl-title-row">
                   <h3 class="kl-title">Llave del tiempo</h3>
-                  <span class="kl-lock-pin">
+                  <span class="kl-lock-pin" id="ktLockPin">
                     <svg viewBox="0 0 16 16" fill="none" stroke="#8A0032" stroke-width="1.8" width="14" height="14"><rect x="3" y="7" width="10" height="7" rx="2"/><path d="M5 7V5a3 3 0 0 1 6 0v2"/></svg>
                   </span>
                 </div>
-                <p class="kl-desc">Se abre cuando llegue nuestra hora especial.</p>
+                <p class="kl-desc">Un recuerdo está guardado para una hora especial.</p>
               </div>
             </div>
-            <div class="key-locked-face kl-bottom">
-              <button class="kl-btn kl-btn-outline" disabled>
-                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" width="13" height="13"><circle cx="8" cy="8" r="6"/><polyline points="8 5 8 8 10 10"/></svg>
-                Vuelve a las 8:00 p. m.
+
+            <!-- Estado bloqueado -->
+            <div class="key-locked-face kt-locked-body">
+              <div class="kt-status-row">
+                <span class="kt-status-pill" id="ktStatusPill">Esperando el momento exacto</span>
+                <button class="kt-config-toggle" onclick="TimeKey.toggleConfig()" aria-label="Configurar" title="Configurar">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                </button>
+              </div>
+              <p class="kt-time-label" id="ktTimeLabel"></p>
+              <button class="kt-btn-locked" disabled>
+                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" width="13" height="13"><rect x="3" y="7" width="10" height="7" rx="2"/><path d="M5 7V5a3 3 0 0 1 6 0v2"/></svg>
+                Bloqueado
               </button>
-              <span class="kl-badge kl-badge-blocked">Bloqueada</span>
+              <!-- Panel de configuración -->
+              <div class="kt-config-panel hidden" id="ktConfigPanel">
+                <label class="kt-config-label">
+                  Fecha y hora de desbloqueo
+                  <input type="datetime-local" class="kt-config-input" id="ktDatetimeInput" onchange="TimeKey.setUnlockDateTime(this.value)"/>
+                </label>
+                <label class="kt-video-label" id="ktVideoLabel">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><rect x="2" y="7" width="15" height="10" rx="2"/><polygon points="17 9 23 6 23 18 17 15"/></svg>
+                  <span id="ktVideoStatus">Cargar video sorpresa (máx. 2 min)</span>
+                  <input type="file" accept="video/*" id="ktVideoInput" onchange="TimeKey.handleVideoUpload(this)" hidden/>
+                </label>
+                <p class="kt-config-err hidden" id="ktVideoErr">El video debe durar máximo 2 minutos.</p>
+              </div>
             </div>
-            <div class="key-open-face kl-bottom hidden">
-              <p class="kl-open-msg">El tiempo siempre nos da una segunda oportunidad.</p>
-              <span class="kl-badge kl-badge-ok">✓ Desbloqueada</span>
+
+            <!-- Estado desbloqueado -->
+            <div class="key-open-face kt-unlocked-body hidden">
+              <div class="kt-unlocked-status-row">
+                <span class="kt-unlocked-badge">Recuerdo disponible</span>
+              </div>
+              <div class="kl-info-box">
+                <p class="kl-open-msg">El momento llegó. Tu recuerdo está listo para ti.</p>
+              </div>
+              <div class="kl-unlocked-footer">
+                <button class="kt-btn-open" onclick="TimeKey.openModal()">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><polygon points="5 3 19 12 5 21 5 3" fill="currentColor"/></svg>
+                  Abrir recuerdo
+                </button>
+                <span class="kl-sparkle-deco">✦ ✦</span>
+              </div>
             </div>
           </div>
         </div>
@@ -263,30 +303,52 @@
           <div class="kl-card locked" id="key-photo">
             <div class="kl-card-top">
               <div class="kl-icon-circle">
-                <svg viewBox="0 0 24 24" fill="none" stroke="#D81B60" stroke-width="2" stroke-linecap="round" width="22" height="22"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                <svg viewBox="0 0 24 24" fill="none" stroke="#C2185B" stroke-width="2" stroke-linecap="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
               </div>
               <div class="kl-info">
                 <div class="kl-title-row">
                   <h3 class="kl-title">Llave de tu sonrisa</h3>
-                  <span class="kl-lock-pin">
+                  <span class="kl-lock-pin" id="kpLockPin">
                     <svg viewBox="0 0 16 16" fill="none" stroke="#8A0032" stroke-width="1.8" width="14" height="14"><rect x="3" y="7" width="10" height="7" rx="2"/><path d="M5 7V5a3 3 0 0 1 6 0v2"/></svg>
                   </span>
                 </div>
-                <p class="kl-desc">Sube una foto y deja que tu sonrisa abra esto.</p>
+                <p class="kl-desc">Sube una foto sonriendo para abrir este recuerdo.</p>
               </div>
             </div>
-            <div class="key-locked-face kl-bottom">
-              <label class="kl-btn kl-btn-primary">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="15" height="15"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-                Subir foto
-                <input type="file" accept="image/*" onchange="handlePhotoUpload(this)" hidden/>
-              </label>
-              <span class="kl-badge kl-badge-pending">Pendiente</span>
+
+            <!-- Marco de foto compartido -->
+            <div class="kp-frame" id="kpFrame">
+              <div class="kp-placeholder" id="kpPlaceholder">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#C2185B" stroke-width="1.5" width="26" height="26"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                <span>Tu foto aparecerá aquí</span>
+              </div>
+              <img class="kp-photo" id="kpPhoto" alt="" draggable="false" style="display:none"/>
             </div>
-            <div class="key-open-face kl-bottom hidden">
-              <div class="kl-photo-frame"><img id="photoPreview" src="" alt=""/></div>
-              <p class="kl-open-msg">Sabía que tu sonrisa podía abrir cualquier puerta.</p>
-              <span class="kl-badge kl-badge-ok">✓ Desbloqueada</span>
+
+            <!-- Estado bloqueado -->
+            <div class="key-locked-face kp-locked-body">
+              <div class="kp-status-row">
+                <span class="kp-status-pill" id="kpStatusPill">Esperando sonrisa</span>
+              </div>
+              <label class="kp-btn-upload" id="kpBtnUpload">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="15" height="15"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                Subir foto
+                <input type="file" accept="image/*" id="kpFileInput" onchange="PhotoKey.handleUpload(this)" hidden/>
+              </label>
+            </div>
+
+            <!-- Estado desbloqueado -->
+            <div class="key-open-face kp-unlocked-body hidden">
+              <div class="kp-unlocked-row">
+                <span class="kp-unlocked-badge">Sonrisa detectada</span>
+              </div>
+              <div class="kl-unlocked-footer">
+                <button class="kp-btn-surprise" onclick="PhotoKey.openModal()">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                  Abrir sorpresa
+                </button>
+                <span class="kl-sparkle-deco">✦ ✦</span>
+              </div>
             </div>
           </div>
         </div>
@@ -320,8 +382,13 @@
               <span class="kl-badge kl-badge-pending">Pendiente</span>
             </div>
             <div class="key-open-face kl-bottom hidden">
-              <p class="kl-open-msg">Ahora sí… algunas cosas se sienten mejor con música.</p>
-              <span class="kl-badge kl-badge-ok">✓ Desbloqueada</span>
+              <div class="kl-info-box">
+                <p class="kl-open-msg">Ahora sí… algunas cosas se sienten mejor con música.</p>
+              </div>
+              <div class="kl-unlocked-footer">
+                <span class="kl-badge kl-badge-ok"><span class="kl-ok-check">✓</span> Desbloqueada</span>
+                <span class="kl-sparkle-deco">✦ ✦</span>
+              </div>
             </div>
           </div>
         </div>
@@ -355,8 +422,13 @@
               <p class="kl-secret-err hidden" id="secretError">Esa no era… intenta con algo que solo tú y yo sabemos.</p>
             </div>
             <div class="key-open-face kl-bottom hidden">
-              <p class="kl-open-msg">Lo sabía… tú sí tenías la llave correcta.</p>
-              <span class="kl-badge kl-badge-ok">✓ Desbloqueada</span>
+              <div class="kl-info-box">
+                <p class="kl-open-msg">Lo sabía… tú sí tenías la llave correcta.</p>
+              </div>
+              <div class="kl-unlocked-footer">
+                <span class="kl-badge kl-badge-ok"><span class="kl-ok-check">✓</span> Desbloqueada</span>
+                <span class="kl-sparkle-deco">✦ ✦</span>
+              </div>
             </div>
           </div>
         </div>
@@ -459,6 +531,46 @@
     <footer class="footer"><p>Hecho con todo mi amor para ti 💕</p></footer>
 
   </main>
+
+  <!-- Modal: Llave del Tiempo -->
+  <div class="kt-modal hidden" id="ktModal" aria-modal="true" role="dialog">
+    <div class="kt-modal-overlay" onclick="TimeKey.closeModal()"></div>
+    <div class="kt-modal-box">
+      <button class="kt-modal-close" onclick="TimeKey.closeModal()" aria-label="Cerrar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="18" height="18"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+      <div class="kt-reveal-screen" id="ktRevealScreen">
+        <div class="kt-reveal-inner">
+          <div class="kt-reveal-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#F6C453" stroke-width="1.4" width="48" height="48"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          </div>
+          <p class="kt-reveal-line1">La espera terminó.</p>
+          <p class="kt-reveal-line2">Este recuerdo fue guardado para este momento.</p>
+        </div>
+      </div>
+      <div class="kt-video-wrap hidden" id="ktVideoWrap">
+        <video id="ktVideo" controls playsinline preload="none"></video>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Llave de tu Sonrisa -->
+  <div class="kp-modal hidden" id="kpModal" aria-modal="true" role="dialog">
+    <div class="kp-modal-overlay" onclick="PhotoKey.closeModal()"></div>
+    <div class="kp-modal-box">
+      <button class="kp-modal-close" onclick="PhotoKey.closeModal()" aria-label="Cerrar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+      <div class="kp-modal-photo-wrap">
+        <img id="kpModalPhoto" alt="" draggable="false"/>
+      </div>
+      <div class="kp-modal-message">
+        <p class="kp-modal-title">La sonrisa abrió el recuerdo.</p>
+        <div class="kp-modal-divider"></div>
+        <p class="kp-modal-sub">Tu sonrisa era la contraseña desde el inicio.</p>
+      </div>
+    </div>
+  </div>
 
   <!-- Corazones y destellos flotantes -->
   <div id="heartsContainer" aria-hidden="true"></div>
