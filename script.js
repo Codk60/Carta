@@ -29,9 +29,40 @@ function launchMiParticles() {
   }
 }
 
-window.addEventListener('load', () => {
-  if (typeof gsap === 'undefined') { skipIntro(); return; }
+let _introReady = false;
 
+window.addEventListener('load', () => {
+  if (typeof gsap === 'undefined') {
+    document.getElementById('startScreen').style.display = 'none';
+    skipIntro(); return;
+  }
+  _introReady = true;
+});
+
+function startExperience() {
+  const startScreen = document.getElementById('startScreen');
+  const magicIntro  = document.getElementById('magicIntro');
+
+  // Mostrar magicIntro invisible y posicionar todos los elementos fuera de pantalla
+  magicIntro.style.display = '';
+  gsap.set(magicIntro, { opacity: 0 });
+  gsap.set(document.getElementById('miOwl'),      { x: 200, y: -220, opacity: 0, rotation: -25, scale: 0.8 });
+  gsap.set(document.getElementById('miEnvWrap'),  { opacity: 0, y: 80, scale: 0.85 });
+  gsap.set(document.getElementById('miEnvClose'), { opacity: 0 });
+  gsap.set(document.getElementById('miEnvOpen'),  { opacity: 0 });
+  gsap.set(document.getElementById('miLetter'),   { opacity: 0 });
+  gsap.set(document.getElementById('miSparkles'), { opacity: 0, scale: 0.6 });
+
+  // magicIntro ya visible detrás — startScreen lo tapa hasta que desaparece
+  gsap.set(magicIntro, { opacity: 1 });
+
+  gsap.to(startScreen, { opacity: 0, duration: 0.45, ease: 'power1.inOut', onComplete: () => {
+    startScreen.style.display = 'none';
+    runMagicIntro();
+  }});
+}
+
+function runMagicIntro() {
   const owl      = document.getElementById('miOwl');
   const envWrap  = document.getElementById('miEnvWrap');
   const envClose = document.getElementById('miEnvClose');
@@ -39,12 +70,9 @@ window.addEventListener('load', () => {
   const letter   = document.getElementById('miLetter');
   const sparkles = document.getElementById('miSparkles');
 
-  gsap.set(owl,      { x: 200, y: -220, opacity: 0, rotation: -25, scale: 0.8 });
-  gsap.set(envWrap,  { opacity: 0, y: 80, scale: 0.85 });
-  gsap.set(envClose, { opacity: 0 });
-  gsap.set(envOpen,  { opacity: 0 });
-  gsap.set(letter,   { opacity: 0 });
-  gsap.set(sparkles, { opacity: 0, scale: 0.6 });
+  const introSfx = new Audio('assets/efecto-inicio.mp3');
+  introSfx.volume = 0.7;
+  introSfx.play().catch(() => {});
 
   const tl = gsap.timeline({ onComplete: () => {
     gsap.to('#magicIntro', { opacity: 0, duration: 0.6, ease: 'power1.inOut', onComplete: () => {
@@ -78,7 +106,7 @@ window.addEventListener('load', () => {
     .to(sparkles, { opacity: 0, duration: 0.18 }, '+=0.05')
     .to(envWrap, { scale: 1.2, opacity: 0, duration: 0.35, ease: 'power2.in' })
     .to({}, { duration: 0.02 });
-});
+}
 
 /* ============================================
    FONDO — BOKEH, PARTÍCULAS, CORAZONES
@@ -182,7 +210,7 @@ window.addEventListener('load', () => {
 
   if (!target) return;
   const text1  = 'Esta carta espera a quien ya sabe la clave de mi corazón.';
-  const text2  = 'La música de abajo hará que esto sea más especial. Tócala antes de seguir.';
+  const text2  = 'Cada palabra que leerás la escribí con todo lo que siento.';
   const desc   = document.getElementById('pwDesc');
   const cursor = document.querySelector('.pw-cursor');
   const HOLD1  = 2000;
@@ -268,7 +296,7 @@ window.addEventListener('load', () => {
 /* ============================================
    CONTRASEÑA
    ============================================ */
-const CLAVE_CORRECTA = 'Micurita04';
+const CLAVE_CORRECTA = ''; // contraseña desactivada temporalmente
 let claveVisible = false;
 
 function checkPassword() {
@@ -276,6 +304,10 @@ function checkPassword() {
   const errorBox = document.getElementById('errorBox');
   const reveal   = document.getElementById('keyReveal');
   const btnText  = document.getElementById('openBtnText');
+
+  // Contraseña desactivada — entra directo
+  unlockPage();
+  return;
 
   if (!claveVisible) {
     claveVisible = true;
@@ -423,6 +455,7 @@ function startMusic() {
     musicaActiva = true;
     musicBtn.classList.add('playing');
     musicBtn.setAttribute('aria-label', 'Desactivar música');
+    if (typeof unlockMusicKey === 'function') unlockMusicKey();
     hideHint();
   }).catch(() => {});
 }
@@ -533,16 +566,28 @@ function initLetterBody() {
 let ogroStep = 0;
 let ogroTriggered = false;
 
-const OGRO_PREGUNTAS = [
-  '¿Está dispuesta a perdonar aunque le duela? 💔',
-  '¿Piensa en él incluso cuando no quiere? 💭',
-  '¿Lo extraña aunque esté enojada con él? 😤❤️'
+const OGRO_POOL = [
+  '¿Está dispuesta a perdonar aunque le duela?',
+  '¿Piensa en él incluso cuando no quiere?',
+  '¿Lo extraña aunque esté enojada con él?',
+  '¿Le late el corazón diferente cuando lo ve?',
+  '¿Estaría ahí en sus peores momentos?',
+  '¿Lo elegiría otra vez si pudiera volver al principio?',
+  '¿Se le va el mal humor cuando él aparece?',
+  '¿Siente que con él todo tiene más sentido?'
 ];
+
+// Seleccionar 3 preguntas al azar de las 8
+const OGRO_PREGUNTAS = OGRO_POOL
+  .slice().sort(() => Math.random() - 0.5)
+  .slice(0, 3);
 const OGRO_RESPUESTAS_MAL = [
-  '¡Mentira! ¡Los que aman no dudan tanto! 😡',
-  '¡No te creo! ¡Vuelve cuando seas honesta! 😠',
-  '¡Eso no me convence! ¡Piénsalo bien! 😤'
+  '¡Mentira! Los que aman de verdad no dudan.',
+  '¡No me convences! Vuelve cuando seas honesta.',
+  '¡Eso no es amor, eso es confusión! Piénsalo bien.',
+  '¡El corazón no miente! Inténtalo de nuevo.'
 ];
+let _idxMal = 0;
 const OGRO_RESPUESTAS_BIEN = [
   'Mmm... tal vez... ¡pero no te confíes! Aún me quedan preguntas 😒',
   'Hmph... eso es algo... ¡pero falta una más! 😤',
@@ -597,7 +642,8 @@ function ogroAnswer(isYes) {
   if (!isYes) {
     // Respuesta incorrecta — ogro se enoja
     vibrar([40, 20, 40]);
-    ogroBubbleSet(OGRO_RESPUESTAS_MAL[ogroStep] || '¡No me convences! 😡');
+    ogroBubbleSet(OGRO_RESPUESTAS_MAL[_idxMal % OGRO_RESPUESTAS_MAL.length]);
+    _idxMal++;
     wrap.classList.remove('ogro-shake');
     void wrap.offsetWidth;
     wrap.classList.add('ogro-shake');
@@ -644,6 +690,18 @@ function ogroBye() {
   }
   setTimeout(() => {
     wrap.classList.add('ogro-bye');
+    // Colapsar la escena rosada después de que el ogro desaparece
+    setTimeout(() => {
+      const scene = wrap.closest('.ogro-scene');
+      if (scene) {
+        scene.style.transition = 'max-height 0.5s ease, padding 0.5s ease, margin 0.5s ease, opacity 0.4s ease';
+        scene.style.maxHeight  = '0';
+        scene.style.padding    = '0';
+        scene.style.marginBottom = '0';
+        scene.style.opacity    = '0';
+        scene.style.overflow   = 'hidden';
+      }
+    }, 600);
     // Revelar carta sellada donde estaba el ogro
     setTimeout(() => {
       const sealed = document.getElementById('sealedLetter');
@@ -680,30 +738,133 @@ function closeLetter() {
   const hint   = document.getElementById('slHintAbove');
   const body   = document.getElementById('letterBody');
 
-  if (body) body.style.maxHeight = '0';
+  // Desliza hacia abajo y desvanece antes de colapsar
+  if (body) {
+    body.style.transition = 'opacity 0.3s ease, transform 0.35s ease';
+    body.style.opacity    = '0';
+    body.style.transform  = 'translateY(24px)';
+  }
+
+  setTimeout(() => {
+    if (body) {
+      body.style.maxHeight = '0';
+      body.style.opacity   = '';
+      body.style.transform = '';
+    }
+  }, 320);
 
   setTimeout(() => {
     if (sealed) { sealed.classList.remove('open'); sealed.style.display = ''; }
     if (hint)   hint.style.display = '';
-  }, 420);
+  }, 520);
 
   vibrar([20]);
 }
 
 /* ============================================
-   PROMESAS SELLADAS
+   LAS LLAVES DE MI CORAZÓN
    ============================================ */
-function revealPromise(el) {
-  if (el.classList.contains('open') || el.classList.contains('breaking')) return;
-  el.classList.add('breaking');
-  vibrar([40, 20, 60]);
-  // Esperar a que el candado se rompa, luego abrir
+const HORA_LLAVE_TIEMPO = 20;       // 8:00 p.m. — editable
+const PALABRA_SECRETA   = 'Micurita'; // palabra secreta — editable
+
+const keysState = { time: false, photo: false, music: false, secret: false };
+
+function unlockKey(id) {
+  if (keysState[id]) return;
+  keysState[id] = true;
+
+  const card = document.getElementById('key-' + id);
+  if (!card) return;
+
+  card.classList.add('unlocking');
+  vibrar([30, 20, 60]);
+
   setTimeout(() => {
-    el.classList.add('open');
-    el.querySelector('.promise-content')?.classList.remove('hidden');
-    lanzarCorazones(el, 10);
-    lanzarDestellosDorados(el, 8);
-  }, 420);
+    card.classList.remove('unlocking');
+    card.classList.remove('locked');
+    card.classList.add('unlocked');
+    const locked   = card.querySelector('.key-locked-face');
+    const unlocked = card.querySelector('.key-open-face');
+    if (locked)   locked.classList.add('hidden');
+    if (unlocked) unlocked.classList.remove('hidden');
+    lanzarDestellosDorados(card, 14);
+    lanzarCorazones(card, 8);
+    checkAllKeysUnlocked();
+  }, 500);
+}
+
+function checkAllKeysUnlocked() {
+  if (!Object.values(keysState).every(Boolean)) return;
+  setTimeout(() => {
+    const finale = document.getElementById('keysFinale');
+    if (finale && finale.classList.contains('hidden')) {
+      finale.classList.remove('hidden');
+      lanzarCorazones(finale, 20);
+      lanzarDestellosDorados(finale, 16);
+      setTimeout(() => finale.scrollIntoView({ behavior: 'smooth', block: 'center' }), 200);
+    }
+  }, 700);
+}
+
+/* Llave 1 — Tiempo */
+function initTimeKey() {
+  const check = () => {
+    if (keysState.time) return;
+    if (new Date().getHours() >= HORA_LLAVE_TIEMPO) unlockKey('time');
+  };
+  check();
+  setInterval(check, 60000);
+}
+
+/* Llave 2 — Foto */
+function handlePhotoUpload(input) {
+  if (!input.files || !input.files[0]) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = document.getElementById('photoPreview');
+    if (img) img.src = e.target.result;
+    unlockKey('photo');
+  };
+  reader.readAsDataURL(input.files[0]);
+}
+
+/* Llave 3 — Música (llamada desde startMusic) */
+function unlockMusicKey() { unlockKey('music'); }
+
+/* Llave 4 — Palabra secreta */
+function checkSecretWord() {
+  const input = document.getElementById('secretWordInput');
+  const err   = document.getElementById('secretError');
+  if (!input) return;
+  if (input.value.trim().toLowerCase() === PALABRA_SECRETA.toLowerCase()) {
+    if (err) err.classList.add('hidden');
+    unlockKey('secret');
+  } else {
+    input.value = '';
+    input.focus();
+    if (err) {
+      err.classList.remove('hidden');
+      setTimeout(() => err.classList.add('hidden'), 3500);
+    }
+    vibrar([40, 20, 40]);
+  }
+}
+document.addEventListener('DOMContentLoaded', () => {
+  initTimeKey();
+  document.getElementById('secretWordInput')?.addEventListener('keydown', e => {
+    if (e.key === 'Enter') checkSecretWord();
+  });
+  // Si la música ya está activa al cargar (autoplay exitoso)
+  if (musicaActiva) unlockMusicKey();
+});
+
+/* Botón sorpresa final */
+function showKeysFinale(btn) {
+  btn.disabled = true;
+  btn.textContent = '💖 ¡Te amo, Geraldine!';
+  lanzarCorazones(btn, 30);
+  lanzarDestellosDorados(btn, 20);
+  vibrar([50, 30, 80, 30, 100]);
 }
 
 /* ============================================
