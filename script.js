@@ -1880,7 +1880,8 @@ function showVideo(btn) {
   const imgs = [
     document.getElementById('loopImg0'),
     document.getElementById('loopImg1'),
-    document.getElementById('loopImg2')
+    document.getElementById('loopImg2'),
+    document.getElementById('loopImg3')
   ].filter(Boolean);
   if (imgs.length < 2) return;
   let current = 0;
