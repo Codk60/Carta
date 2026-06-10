@@ -49,6 +49,7 @@ function startExperience() {
   }
   const bgScene = document.querySelector('.bg-scene');
   if (bgScene) bgScene.style.display = '';
+  initBackground();
   const startScreen = document.getElementById('startScreen');
   const magicIntro  = document.getElementById('magicIntro');
 
@@ -120,7 +121,10 @@ function runMagicIntro() {
 /* ============================================
    FONDO — BOKEH, PARTÍCULAS, CORAZONES
    ============================================ */
-(function initBackground() {
+let _bgInitialized = false;
+function initBackground() {
+  if (_bgInitialized) return;
+  _bgInitialized = true;
   // Bolas bokeh desenfocadas
   const bokehWrap = document.getElementById('bgBokeh');
   const bokehColors = [
@@ -209,7 +213,7 @@ function runMagicIntro() {
     h.style.animationDelay    = (-Math.random() * 18) + 's';
     fhWrap.appendChild(h);
   }
-})();
+}
 
 /* ============================================
    TYPEWRITER — TEXTO DESCRIPCIÓN
