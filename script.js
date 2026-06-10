@@ -1723,7 +1723,7 @@ const Expediente = (() => {
   async function claimTicket() {
     const msg = '¡Quiero canjear mi ticket! Una cita de Toy Story juntos 🎬🎟️';
     try {
-      const res = await fetch('img/ticket%20de%20cine.jpg');
+      const res = await fetch('img/fotos/ticket%20de%20cine.jpg');
       const blob = await res.blob();
       const file = new File([blob], 'ticket-toy-story.jpg', { type: 'image/jpeg' });
       if (navigator.canShare && navigator.canShare({ files: [file] })) {

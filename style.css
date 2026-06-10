@@ -3581,7 +3581,7 @@ body {
   content: '';
   position: absolute;
   inset: -14px;
-  background: url('img/fondo%20negro.jpg') center / cover repeat;
+  background: url('img/fotos/fondo%20negro.jpg') center / cover repeat;
   filter: blur(5px);
   z-index: 0;
 }
