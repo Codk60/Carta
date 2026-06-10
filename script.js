@@ -41,6 +41,14 @@ window.addEventListener('load', () => {
 
 function startExperience() {
   playBtnSfx();
+  const btn = document.getElementById('startBtn');
+  if (btn) {
+    lanzarDestellosDorados(btn, 24);
+    lanzarCorazones(btn, 10);
+    vibrar([30, 20, 50]);
+  }
+  const bgScene = document.querySelector('.bg-scene');
+  if (bgScene) bgScene.style.display = '';
   const startScreen = document.getElementById('startScreen');
   const magicIntro  = document.getElementById('magicIntro');
 
