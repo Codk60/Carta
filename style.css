@@ -462,10 +462,12 @@ body {
   text-align: center;
 }
 .rose-icon-loop {
+  position: relative;
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: 140px;
+  width: 140px;
+  height: 140px;
   margin: 0 auto 14px;
 }
 .loop-img {
