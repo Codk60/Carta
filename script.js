@@ -576,22 +576,30 @@ function initLetterBody() {
 /* ── Ogro guardián ── */
 let ogroStep = 0;
 let ogroTriggered = false;
+let _ogroNoImgIdx = 0;
+const _ogroNoImgOrder = ['ogroImg2','ogroImg1','ogroImg0','ogroImg3']; // fredy,lilo,ogro,yakson
 
 const OGRO_POOL = [
-  '¿Está dispuesta a perdonar aunque le duela?',
-  '¿Piensa en él incluso cuando no quiere?',
-  '¿Lo extraña aunque esté enojada con él?',
-  '¿Le late el corazón diferente cuando lo ve?',
-  '¿Estaría ahí en sus peores momentos?',
-  '¿Lo elegiría otra vez si pudiera volver al principio?',
-  '¿Se le va el mal humor cuando él aparece?',
-  '¿Siente que con él todo tiene más sentido?'
+  '¿Perdonarías aunque duela, porque sabes que él vale la pena?',
+  '¿A veces piensas en él aunque no quieras... y no puedes evitarlo?',
+  '¿Lo extrañas incluso cuando estás molesta con él?',
+  '¿El corazón te late diferente cuando lo ves llegar?',
+  '¿Estarías ahí para él en sus peores días, sin dudar ni un segundo?',
+  '¿Si pudieras volver atrás y elegir de nuevo, lo elegirías a él?',
+  '¿Cuando él aparece, hasta el mal humor se te va solo?',
+  '¿Con él sientes que todo encaja un poco mejor que antes?',
+  '¿Te cuesta imaginarte cómo sería tu vida sin él?',
+  '¿Cuando algo te duele de verdad, lo primero que quieres es contárselo a él?',
+  '¿Hasta sus cositas raras te gustan, aunque a veces te saquen de quicio?',
+  '¿Cuando él te dice que te quiere, sientes algo cálido por dentro?',
+  '¿Se te escapa la sonrisa cuando recuerdas algún momento de los dos?',
+  '¿Lo querrías igual aunque todo lo demás en tu vida cambiara?'
 ];
 
-// Seleccionar 3 preguntas al azar de las 8
+// Seleccionar 6 preguntas al azar del pool
 const OGRO_PREGUNTAS = OGRO_POOL
   .slice().sort(() => Math.random() - 0.5)
-  .slice(0, 3);
+  .slice(0, 6);
 const OGRO_RESPUESTAS_MAL = [
   '¡Mentira! Los que aman de verdad no dudan.',
   '¡No me convences! Vuelve cuando seas honesta.',
@@ -601,7 +609,10 @@ const OGRO_RESPUESTAS_MAL = [
 let _idxMal = 0;
 const OGRO_RESPUESTAS_BIEN = [
   'Mmm... tal vez... ¡pero no te confíes! Aún me quedan preguntas 😒',
-  'Hmph... eso es algo... ¡pero falta una más! 😤',
+  'Hmph... eso es algo... pero no te relajes todavía 😤',
+  'Bueno... algo de razón tienes... ¡pero aún no termino! 👀',
+  'Voy creyéndote un poco... ¡pero siguen las preguntas! 😤',
+  '¡Casi casi! Solo una más... y más te vale contestar bien 😒',
   'Está bien, está bien... supongo que sí lo amas de verdad 💛\n¡Pero como le hagas daño, vuelvo! 👊'
 ];
 
@@ -655,6 +666,25 @@ function ogroAnswer(isYes) {
     vibrar([40, 20, 40]);
     ogroBubbleSet(OGRO_RESPUESTAS_MAL[_idxMal % OGRO_RESPUESTAS_MAL.length]);
     _idxMal++;
+    // Mostrar personaje 2s con sacudida y volver al burrito
+    const _allOgroIds = ['ogroImgBurrito','ogroImg0','ogroImg1','ogroImg2','ogroImg3'];
+    _allOgroIds.forEach(id => { const el = document.getElementById(id); if (el) el.classList.remove('ogro-loop-active'); });
+    const nextId = _ogroNoImgOrder[_ogroNoImgIdx % _ogroNoImgOrder.length];
+    _ogroNoImgIdx++;
+    const nextEl = document.getElementById(nextId);
+    if (nextEl) nextEl.classList.add('ogro-loop-active');
+    const loopWrap = document.getElementById('ogroLoopWrap');
+    if (loopWrap) {
+      loopWrap.classList.remove('ogro-img-shake');
+      void loopWrap.offsetWidth;
+      loopWrap.classList.add('ogro-img-shake');
+      loopWrap.addEventListener('animationend', () => loopWrap.classList.remove('ogro-img-shake'), { once: true });
+    }
+    setTimeout(() => {
+      _allOgroIds.forEach(id => { const el = document.getElementById(id); if (el) el.classList.remove('ogro-loop-active'); });
+      const burrito = document.getElementById('ogroImgBurrito');
+      if (burrito) burrito.classList.add('ogro-loop-active');
+    }, 2000);
     wrap.classList.remove('ogro-shake');
     void wrap.offsetWidth;
     wrap.classList.add('ogro-shake');
@@ -750,27 +780,27 @@ function closeLetter() {
   const hint   = document.getElementById('slHintAbove');
   const body   = document.getElementById('letterBody');
 
-  // Desliza hacia abajo y desvanece antes de colapsar
-  if (body) {
-    body.style.transition = 'opacity 0.3s ease, transform 0.35s ease';
-    body.style.opacity    = '0';
-    body.style.transform  = 'translateY(24px)';
-  }
-
-  setTimeout(() => {
-    if (body) {
-      body.style.maxHeight = '0';
-      body.style.opacity   = '';
-      body.style.transform = '';
-    }
-  }, 320);
-
-  setTimeout(() => {
-    if (sealed) { sealed.classList.remove('open'); sealed.style.display = ''; }
-    if (hint)   hint.style.display = '';
-  }, 520);
-
   vibrar([20]);
+  if (!body) return;
+
+  const savedY = window.scrollY;
+  document.documentElement.style.scrollBehavior = 'auto';
+
+  const tl = gsap.timeline({
+    onComplete: () => {
+      body.style.maxHeight = '0';
+      gsap.set(body, { clearProps: 'all' });
+      window.scrollTo(0, savedY);
+      if (sealed) { sealed.classList.remove('open'); sealed.style.display = ''; }
+      if (hint)   hint.style.display = '';
+      setTimeout(() => {
+        document.documentElement.style.scrollBehavior = '';
+        if (sealed) sealed.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 80);
+    }
+  });
+  tl.to(body, { duration: 0.2, y: 10, ease: 'power1.out' })
+    .to(body, { duration: 0.55, y: -60, scale: 0.05, opacity: 0, transformOrigin: 'top center', ease: 'power2.in' }, '-=0.05');
 }
 
 /* ============================================
