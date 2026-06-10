@@ -1874,6 +1874,24 @@ function showVideo(btn) {
 }
 
 /* ============================================
+   BUCLE DE IMÁGENES (paltitas ↔ harry)
+   ============================================ */
+(function() {
+  const imgs = [
+    document.getElementById('loopImg0'),
+    document.getElementById('loopImg1'),
+    document.getElementById('loopImg2')
+  ].filter(Boolean);
+  if (imgs.length < 2) return;
+  let current = 0;
+  setInterval(() => {
+    imgs[current].classList.remove('loop-img-active');
+    current = (current + 1) % imgs.length;
+    imgs[current].classList.add('loop-img-active');
+  }, 1500);
+})();
+
+/* ============================================
    BOTÓN FINAL — LLUVIA DE AMOR
    ============================================ */
 function showFinalMessage(btn) {

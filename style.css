@@ -461,14 +461,28 @@ body {
   margin: 0 auto 14px;
   text-align: center;
 }
+.rose-icon-loop {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 140px;
+  margin: 0 auto 14px;
+}
+.loop-img {
+  position: absolute;
+  width: 140px;
+  height: 140px;
+  object-fit: contain;
+  object-position: center;
+  opacity: 0;
+  transition: opacity 0.6s ease;
+  pointer-events: none;
+}
+.loop-img-active { opacity: 1; }
 .rose-icon {
   display: inline-block;
   animation: roseFloat 4s ease-in-out infinite;
   filter: drop-shadow(0 4px 10px rgba(140,0,40,0.30));
-}
-.paltitas-img {
-  width: 155px;
-  height: auto;
 }
 @keyframes roseFloat {
   0%, 100% { transform: translateY(0) rotate(-3deg); }
