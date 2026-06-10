@@ -765,7 +765,6 @@ function closeLetter() {
    LAS LLAVES DE MI CORAZÓN
    ============================================ */
 // HORA_LLAVE_TIEMPO reemplazada por TimeKey (datetime configurable + video sorpresa)
-const PALABRA_SECRETA   = 'Micurita'; // palabra secreta — editable
 
 const keysState = { time: false, photo: false, music: false, secret: false };
 
@@ -848,7 +847,9 @@ const MicuDB = (() => {
    ============================================ */
 const TimeKey = (() => {
   const VID_KEY = 'timekey';
-  const LS_DT   = 'kt_unlock_dt';
+  const LS_TIME = 'kt_unlock_time';  // "HH:MM"
+  const LS_MODE = 'kt_video_mode';   // 'file' | 'link'
+  const LS_LINK = 'kt_video_link';   // URL
 
   let _blobUrl = null;
   let _ivl     = null;
@@ -857,43 +858,74 @@ const TimeKey = (() => {
   function saveBlob(blob) { return MicuDB.put('videos', VID_KEY, blob); }
   function loadBlob()     { return MicuDB.get('videos', VID_KEY); }
 
-  /* ── Unlock time ── */
-  function getUnlockDT() {
-    const s = localStorage.getItem(LS_DT);
-    return s ? new Date(s) : null;
-  }
+  /* ── Unlock check (hora del día) ── */
   function isUnlocked() {
-    const dt = getUnlockDT();
-    return !!(dt && new Date() >= dt);
+    const t = localStorage.getItem(LS_TIME);
+    if (!t) return false;
+    const [h, m]   = t.split(':').map(Number);
+    const now      = new Date();
+    return (now.getHours() * 60 + now.getMinutes()) >= (h * 60 + m);
   }
 
   /* ── UI helpers ── */
   function updateTimeLabel() {
     const el = document.getElementById('ktTimeLabel');
     if (!el) return;
-    const dt = getUnlockDT();
-    if (!dt) { el.textContent = ''; return; }
-    const d = dt.toLocaleDateString('es-ES', { day:'2-digit', month:'2-digit', year:'numeric' });
-    const t = dt.toLocaleTimeString('es-ES', { hour:'2-digit', minute:'2-digit' });
-    el.textContent = 'Se abrirá el ' + d + ' a las ' + t;
-  }
-  function preloadDatetimeInput() {
-    const el = document.getElementById('ktDatetimeInput');
-    if (!el) return;
-    const s = localStorage.getItem(LS_DT);
-    if (!s) return;
-    const dt  = new Date(s);
-    const pad = n => String(n).padStart(2, '0');
-    el.value  = dt.getFullYear() + '-' + pad(dt.getMonth()+1) + '-' + pad(dt.getDate())
-              + 'T' + pad(dt.getHours()) + ':' + pad(dt.getMinutes());
+    const t = localStorage.getItem(LS_TIME);
+    el.textContent = t ? 'Se abrirá a las ' + t : '';
   }
 
-  /* ── Public: setUnlockDateTime ── */
-  function setUnlockDateTime(value) {
+  function _applyMode(mode) {
+    const fileBtn  = document.getElementById('ktModeFile');
+    const linkBtn  = document.getElementById('ktModeLink');
+    const fileSec  = document.getElementById('ktFileSection');
+    const linkSec  = document.getElementById('ktLinkSection');
+    if (mode === 'link') {
+      if (fileBtn) fileBtn.classList.remove('active');
+      if (linkBtn) linkBtn.classList.add('active');
+      if (fileSec) fileSec.classList.add('hidden');
+      if (linkSec) linkSec.classList.remove('hidden');
+    } else {
+      if (fileBtn) fileBtn.classList.add('active');
+      if (linkBtn) linkBtn.classList.remove('active');
+      if (fileSec) fileSec.classList.remove('hidden');
+      if (linkSec) linkSec.classList.add('hidden');
+    }
+  }
+
+  function restoreInputs() {
+    const timeEl = document.getElementById('ktTimeInput');
+    const t = localStorage.getItem(LS_TIME);
+    if (timeEl && t) timeEl.value = t;
+
+    const mode = localStorage.getItem(LS_MODE) || 'file';
+    _applyMode(mode);
+
+    const link   = localStorage.getItem(LS_LINK) || '';
+    const linkEl = document.getElementById('ktLinkInput');
+    if (linkEl && link) linkEl.value = link;
+  }
+
+  /* ── Public: setUnlockTime ── */
+  function setUnlockTime(value) {
     if (!value) return;
-    localStorage.setItem(LS_DT, new Date(value).toISOString());
+    localStorage.setItem(LS_TIME, value);
     updateTimeLabel();
     if (isUnlocked() && !keysState.time) _triggerUnlock();
+  }
+
+  /* ── Public: setMode ── */
+  function setMode(mode) {
+    localStorage.setItem(LS_MODE, mode);
+    _applyMode(mode);
+  }
+
+  /* ── Public: setLink ── */
+  function setLink(url) {
+    if (!url) return;
+    localStorage.setItem(LS_LINK, url);
+    const st = document.getElementById('ktVideoStatus');
+    if (st) st.textContent = 'Link guardado ✓';
   }
 
   /* ── Public: handleVideoUpload ── */
@@ -916,7 +948,7 @@ const TimeKey = (() => {
         if (_blobUrl) URL.revokeObjectURL(_blobUrl);
         _blobUrl = URL.createObjectURL(file);
         const st = document.getElementById('ktVideoStatus');
-        if (st) st.textContent = 'Video cargado';
+        if (st) st.textContent = 'Video cargado ✓';
       }).catch(e => console.warn('TimeKey: saveBlob error', e));
     };
     tmpVid.src = tmpUrl;
@@ -925,20 +957,73 @@ const TimeKey = (() => {
   /* ── Public: toggleConfig ── */
   function toggleConfig() {
     const panel = document.getElementById('ktConfigPanel');
+    const gate  = document.getElementById('ktPinGate');
     if (!panel) return;
-    const hiding = !panel.classList.contains('hidden');
-    panel.classList.toggle('hidden');
-    if (!hiding) panel.style.animation = 'ktPanelIn 0.22s ease both';
+    const isOpen = !panel.classList.contains('hidden') || (gate && !gate.classList.contains('hidden'));
+    if (isOpen) {
+      panel.classList.add('hidden');
+      if (gate) gate.classList.add('hidden');
+      return;
+    }
+    const pin = localStorage.getItem('kt_config_pin');
+    if (pin) {
+      if (gate) {
+        const inp = document.getElementById('ktPinInput');
+        const err = document.getElementById('ktPinErr');
+        if (inp) inp.value = '';
+        if (err) err.classList.add('hidden');
+        gate.classList.remove('hidden');
+        gate.style.animation = 'ktPanelIn 0.22s ease both';
+        if (inp) setTimeout(() => inp.focus(), 50);
+      }
+    } else {
+      panel.classList.remove('hidden');
+      panel.style.animation = 'ktPanelIn 0.22s ease both';
+    }
+  }
+
+  /* ── Public: checkPin ── */
+  function checkPin() {
+    const inp   = document.getElementById('ktPinInput');
+    const err   = document.getElementById('ktPinErr');
+    const gate  = document.getElementById('ktPinGate');
+    const panel = document.getElementById('ktConfigPanel');
+    const stored = localStorage.getItem('kt_config_pin');
+    if (inp && inp.value === stored) {
+      if (gate)  gate.classList.add('hidden');
+      if (panel) { panel.classList.remove('hidden'); panel.style.animation = 'ktPanelIn 0.22s ease both'; }
+    } else {
+      if (err) err.classList.remove('hidden');
+      if (inp) { inp.value = ''; inp.focus(); }
+    }
+  }
+
+  /* ── Public: savePin ── */
+  function savePin(value) {
+    if (!value || value.length < 4) return;
+    localStorage.setItem('kt_config_pin', value);
+    const el = document.getElementById('ktNewPin');
+    if (el) el.placeholder = 'Clave guardada ✓';
   }
 
   /* ── Public: openModal ── */
   function openModal() {
     if (_open) return;
-    if (!_blobUrl) {
-      const panel = document.getElementById('ktConfigPanel');
-      if (panel) { panel.classList.remove('hidden'); }
+    const mode = localStorage.getItem(LS_MODE) || 'file';
+    const link = localStorage.getItem(LS_LINK) || '';
+
+    if (mode === 'link') {
+      if (!link) { toggleConfig(); return; }
+      window.open(link, '_blank', 'noopener,noreferrer');
       return;
     }
+
+    if (!_blobUrl) {
+      const panel = document.getElementById('ktConfigPanel');
+      if (panel) panel.classList.remove('hidden');
+      return;
+    }
+
     _open = true;
     const modal  = document.getElementById('ktModal');
     const reveal = document.getElementById('ktRevealScreen');
@@ -946,7 +1031,6 @@ const TimeKey = (() => {
     const video  = document.getElementById('ktVideo');
     if (!modal) return;
 
-    // Reset reveal animations
     ['kt-reveal-icon','kt-reveal-line1','kt-reveal-line2'].forEach(cls => {
       const el = modal.querySelector('.' + cls);
       if (!el) return;
@@ -958,13 +1042,11 @@ const TimeKey = (() => {
     reveal.classList.remove('hidden');
     wrap.classList.add('hidden');
     video.src = '';
-
     modal.classList.remove('hidden');
     void modal.offsetHeight;
     modal.classList.add('kt-visible');
     document.body.style.overflow = 'hidden';
 
-    // After reveal text, transition to video
     setTimeout(() => {
       if (!_open) return;
       reveal.style.transition = 'opacity 0.38s ease';
@@ -972,17 +1054,14 @@ const TimeKey = (() => {
       setTimeout(() => {
         if (!_open) return;
         reveal.classList.add('hidden');
-        reveal.style.opacity    = '';
-        reveal.style.transition = '';
+        reveal.style.opacity = reveal.style.transition = '';
         video.src = _blobUrl;
-        wrap.style.opacity    = '0';
-        wrap.style.transition = 'opacity 0.38s ease';
+        wrap.style.cssText = 'opacity:0;transition:opacity 0.38s ease';
         wrap.classList.remove('hidden');
         void wrap.offsetHeight;
         wrap.style.opacity = '1';
         setTimeout(() => {
-          wrap.style.opacity    = '';
-          wrap.style.transition = '';
+          wrap.style.cssText = '';
           video.play().catch(() => {});
         }, 400);
       }, 380);
@@ -1013,18 +1092,17 @@ const TimeKey = (() => {
 
   /* ── Public: init ── */
   function init() {
-    preloadDatetimeInput();
+    restoreInputs();
     updateTimeLabel();
     loadBlob().then(blob => {
       if (!blob) return;
       if (_blobUrl) URL.revokeObjectURL(_blobUrl);
       _blobUrl = URL.createObjectURL(blob);
       const st = document.getElementById('ktVideoStatus');
-      if (st) st.textContent = 'Video cargado';
+      if (st) st.textContent = 'Video cargado ✓';
     }).catch(() => {});
 
     if (isUnlocked()) { _triggerUnlock(); return; }
-
     if (_ivl) clearInterval(_ivl);
     _ivl = setInterval(() => {
       if (keysState.time) { clearInterval(_ivl); _ivl = null; return; }
@@ -1032,7 +1110,45 @@ const TimeKey = (() => {
     }, 30000);
   }
 
-  return { init, openModal, closeModal, handleVideoUpload, setUnlockDateTime, toggleConfig };
+  /* ── Public: reset ── */
+  function reset() {
+    if (!confirm('¿Restablecer todo? Se borrará la hora, el video/link y la clave.')) return;
+    localStorage.removeItem(LS_TIME);
+    localStorage.removeItem(LS_MODE);
+    localStorage.removeItem(LS_LINK);
+    localStorage.removeItem('kt_config_pin');
+    MicuDB.put('videos', VID_KEY, null).catch(() => {});
+    if (_blobUrl) { URL.revokeObjectURL(_blobUrl); _blobUrl = null; }
+    if (_ivl) { clearInterval(_ivl); _ivl = null; }
+    _open = false;
+
+    // Reset UI al estado inicial
+    const card     = document.getElementById('key-time');
+    const locked   = card && card.querySelector('.kt-locked-body');
+    const unlocked = card && card.querySelector('.kt-unlocked-body');
+    const pill     = document.getElementById('ktStatusPill');
+    const timeLabel = document.getElementById('ktTimeLabel');
+    const panel    = document.getElementById('ktConfigPanel');
+    const gate     = document.getElementById('ktPinGate');
+    const stEl     = document.getElementById('ktVideoStatus');
+    const pinEl    = document.getElementById('ktNewPin');
+
+    if (card)     { card.classList.remove('unlocked'); card.classList.add('locked'); }
+    if (locked)   locked.classList.remove('hidden');
+    if (unlocked) unlocked.classList.add('hidden');
+    if (pill)     { pill.textContent = 'Esperando el momento exacto'; pill.classList.remove('ready'); }
+    if (timeLabel) timeLabel.textContent = '';
+    if (panel)    panel.classList.add('hidden');
+    if (gate)     gate.classList.add('hidden');
+    if (stEl)     stEl.textContent = 'Cargar video (máx. 2 min)';
+    if (pinEl)    { pinEl.value = ''; pinEl.placeholder = 'Nueva clave (4–6 dígitos)'; }
+
+    keysState.time = false;
+    restoreInputs();
+    init();
+  }
+
+  return { init, openModal, closeModal, handleVideoUpload, setUnlockTime, setMode, setLink, toggleConfig, checkPin, savePin, reset };
 })();
 
 /* ============================================
@@ -1152,32 +1268,184 @@ const PhotoKey = (() => {
 function unlockMusicKey() { unlockKey('music'); }
 
 /* Llave 4 — Palabra secreta */
-function checkSecretWord() {
-  const input = document.getElementById('secretWordInput');
-  const err   = document.getElementById('secretError');
-  if (!input) return;
-  if (input.value.trim().toLowerCase() === PALABRA_SECRETA.toLowerCase()) {
-    if (err) err.classList.add('hidden');
-    unlockKey('secret');
-  } else {
-    input.value = '';
-    input.focus();
-    if (err) {
-      err.classList.remove('hidden');
-      setTimeout(() => err.classList.add('hidden'), 3500);
-    }
-    vibrar([40, 20, 40]);
+/* ============================================
+   RETO DE RECUERDOS
+   ============================================ */
+const RetoCupon = (() => {
+  const LS_AT    = 'ks_unlocked_at';
+  const LS_NUM   = 'ks_coupon_num';
+  const LS_WISH  = 'ks_wish';
+  const COOLDOWN = 3 * 24 * 60 * 60 * 1000;
+
+  const CUPONES = [
+    { premio: 'Tu comida preferida',   valido: 'un antojo especial',      codigo: 'AMOR-001' },
+    { premio: 'Una salida sorpresa',   valido: 'una salida especial',     codigo: 'AMOR-002' },
+    { premio: 'Un deseo especial',     valido: 'un deseo tuyo',           codigo: 'AMOR-003' },
+    { premio: 'Un plan elegido por ti',valido: 'un plan a tu elección',   codigo: 'AMOR-004' },
+  ];
+
+  let _num  = 0;
+  let _wish = '';
+
+  function _cupon() { return CUPONES[_num % CUPONES.length]; }
+
+  function _daysLeft(at) {
+    return Math.ceil((COOLDOWN - (Date.now() - at)) / 86400000);
   }
-}
+
+  function _fill(wish) {
+    const c = _cupon();
+    document.querySelectorAll('.ks-field-prize').forEach(el => el.textContent = c.premio);
+    document.querySelectorAll('.ks-field-wish').forEach(el => el.textContent = 'Deseo: ' + wish);
+    document.querySelectorAll('.ks-field-code').forEach(el => el.textContent = c.codigo);
+    document.querySelectorAll('.ks-field-valid').forEach(el => el.textContent = 'Válido por: ' + c.valido);
+  }
+
+  function init() {
+    const at   = parseInt(localStorage.getItem(LS_AT)  || '0');
+    const num  = parseInt(localStorage.getItem(LS_NUM) || '0');
+    const wish = localStorage.getItem(LS_WISH) || '';
+
+    if (at > 0 && (Date.now() - at) < COOLDOWN) {
+      _num  = num;
+      _wish = wish;
+      const days = _daysLeft(at);
+      document.getElementById('ksCooldownMsg').textContent =
+        `Nuevo cupón disponible en ${days} día${days !== 1 ? 's' : ''}.`;
+      _fill(wish);
+      document.getElementById('ks-challenge').classList.add('hidden');
+      document.getElementById('ks-cooldown').classList.remove('hidden');
+    } else if (at > 0) {
+      _num = (num + 1) % CUPONES.length;
+      localStorage.setItem(LS_NUM, _num);
+    }
+  }
+
+  function _showStep(n) {
+    [1,2,3,4].forEach(i => {
+      document.getElementById('ksStep'+i).classList.toggle('hidden', i !== n);
+    });
+    document.getElementById('ksStepCounter').textContent = `Pregunta ${n} de 4`;
+    const input = document.getElementById('ksQ'+n);
+    if (input) setTimeout(() => input.focus(), 80);
+  }
+
+  function nextStep(current) {
+    const val = document.getElementById('ksQ'+current).value.trim();
+    const err = document.getElementById('ksError'+current);
+    if (!val) {
+      err.classList.remove('hidden');
+      setTimeout(() => err.classList.add('hidden'), 2500);
+      return;
+    }
+    err.classList.add('hidden');
+    _showStep(current + 1);
+  }
+
+  function prevStep(current) {
+    _showStep(current - 1);
+  }
+
+  function unlock() {
+    const q4  = document.getElementById('ksQ4').value.trim();
+    const err = document.getElementById('ksError4');
+    if (!q4) {
+      err.classList.remove('hidden');
+      setTimeout(() => err.classList.add('hidden'), 2500);
+      return;
+    }
+    _wish = q4;
+    localStorage.setItem(LS_AT,   Date.now().toString());
+    localStorage.setItem(LS_NUM,  _num.toString());
+    localStorage.setItem(LS_WISH, q4);
+    _fill(q4);
+    unlockKey('secret');
+  }
+
+  function prepareCapture() {
+    const existing = document.getElementById('ksCaptureModal');
+    if (existing) existing.remove();
+    const c    = _cupon();
+    const wish = _wish || (localStorage.getItem(LS_WISH) || '');
+    const modal = document.createElement('div');
+    modal.id = 'ksCaptureModal';
+    modal.className = 'ks-capture-modal';
+    modal.innerHTML = `
+      <div class="ks-capture-inner">
+        <div class="ks-coupon-container">
+          <img src="img/cupon.png" class="ks-coupon-img" alt="Cupón" draggable="false"/>
+          <div class="ks-coupon-overlay">
+            <p class="ks-co-for">Cupón para: <strong>mi persona favorita</strong></p>
+            <p class="ks-co-prize">${c.premio}</p>
+            <p class="ks-co-wish">Deseo: ${wish}</p>
+            <p class="ks-co-code">${c.codigo}</p>
+            <p class="ks-co-valid">Válido por: ${c.valido}</p>
+          </div>
+        </div>
+        <button class="ks-btn-close" onclick="document.getElementById('ksCaptureModal').remove()">Cerrar</button>
+      </div>`;
+    document.body.appendChild(modal);
+  }
+
+  function sendWhatsApp() {
+    const wish = _wish || (localStorage.getItem(LS_WISH) || '');
+    const msg  = encodeURIComponent(`Ya desbloqueé mi cupón. Quiero reclamar: ${wish}`);
+    window.open(`https://wa.me/?text=${msg}`, '_blank');
+  }
+
+  function reset() {
+    localStorage.removeItem(LS_AT);
+    localStorage.removeItem(LS_NUM);
+    localStorage.removeItem(LS_WISH);
+    _num = 0; _wish = '';
+    ['ksQ1','ksQ2','ksQ3','ksQ4'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+    const card = document.getElementById('key-secret');
+    if (card) {
+      card.classList.remove('unlocked','unlocking');
+      card.classList.add('locked');
+      const locked   = card.querySelector('.key-locked-face');
+      const unlocked = card.querySelector('.key-open-face');
+      if (locked)   locked.classList.remove('hidden');
+      if (unlocked) unlocked.classList.add('hidden');
+    }
+    document.getElementById('ks-cooldown').classList.add('hidden');
+    document.getElementById('ks-challenge').classList.remove('hidden');
+    _showStep(1);
+  }
+
+  return { init, unlock, nextStep, prevStep, prepareCapture, sendWhatsApp, reset };
+})();
+
 document.addEventListener('DOMContentLoaded', () => {
   TimeKey.init();
   PhotoKey.init();
-  document.getElementById('secretWordInput')?.addEventListener('keydown', e => {
-    if (e.key === 'Enter') checkSecretWord();
-  });
+  RetoCupon.init();
   // Si la música ya está activa al cargar (autoplay exitoso)
   if (musicaActiva) unlockMusicKey();
 });
+
+/* Toggle llaves de mi corazón */
+function toggleKeys() {
+  const body  = document.getElementById('klCollapseBody');
+  const btn   = document.getElementById('klToggleBtn');
+  const label = document.getElementById('klToggleLabel');
+  const audio = document.getElementById('toystoryAudio');
+  const isOpen = body.classList.toggle('open');
+  btn.setAttribute('aria-expanded', isOpen);
+  label.textContent = isOpen ? 'Cerrar las llaves' : 'Abrir las llaves';
+  if (isOpen) {
+    if (bgMusic) bgMusic.volume = 0.1;
+    if (audio) {
+      audio.loop = false;
+      audio.currentTime = 0;
+      audio.volume = 0.6;
+      audio.play().catch(() => {});
+      audio.onended = () => { if (bgMusic) bgMusic.volume = 0.5; };
+    }
+  } else {
+    if (audio) { audio.pause(); audio.currentTime = 0; audio.onended = null; }
+  }
+}
 
 /* Botón sorpresa final */
 function showKeysFinale(btn) {
