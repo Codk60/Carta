@@ -215,7 +215,7 @@
     <!-- ✦ Las llaves de mi corazón -->
     <section class="section kl-section" id="keysSection">
       <h2 class="section-title">✦ Las llaves de mi corazón</h2>
-      <img src="img/001.png" class="kl-header-img" alt="" draggable="false"/>
+      <img src="img/001.png" class="kl-header-img" id="klHeaderImg" alt="" draggable="false"/>
 
       <button class="kl-toggle-btn" id="klToggleBtn" onclick="toggleKeys()" aria-expanded="false">
         <span class="kl-toggle-label" id="klToggleLabel">Abrir las llaves</span>
@@ -227,12 +227,8 @@
       <div class="kl-collapse-body" id="klCollapseBody">
         <div class="kl-collapse-inner">
 
-      <div class="kl-peka-header">
-        <img src="img/peka.png" class="kl-peka-img" alt="" draggable="false" loading="lazy"/>
-        <div class="kl-peka-overlay"></div>
-        <div class="kl-peka-text">
-          <p class="keys-subtitle">No todo se abre con un botón.<br>Algunas cosas necesitan una sonrisa,<br>una canción y una palabra que solo tú y yo sabemos.</p>
-        </div>
+      <div class="kl-subtitle-block">
+        <p class="keys-subtitle">No todo se abre con un botón.<br>Algunas cosas necesitan una sonrisa,<br>una canción y una palabra que solo tú y yo sabemos.</p>
       </div>
 
       <div class="kl-timeline">
@@ -402,26 +398,44 @@
               </div>
               <div class="kl-info">
                 <div class="kl-title-row">
-                  <h3 class="kl-title">Llave de la canción</h3>
+                  <h3 class="kl-title">Llave de nuestra playlist</h3>
                   <span class="kl-lock-pin">
-                    <svg viewBox="0 0 16 16" fill="none" stroke="#8A0032" stroke-width="1.8" width="14" height="14"><rect x="3" y="7" width="10" height="7" rx="2"/><path d="M5 7V5a3 3 0 0 1 6 0v2"/></svg>
+                    <svg viewBox="0 0 16 16" fill="none" stroke="#ffffff" stroke-width="1.8" width="14" height="14"><rect x="3" y="7" width="10" height="7" rx="2"/><path d="M5 7V5a3 3 0 0 1 6 0v2"/></svg>
                   </span>
                 </div>
-                <p class="kl-desc">Primero toca la música para sentirlo mejor.</p>
+                <p class="kl-desc">Primero escucha nuestra canción. Después se abrirán las canciones que guardé para ti.</p>
               </div>
             </div>
+
+            <!-- Estado bloqueado: vinilo + reproductor -->
             <div class="key-locked-face kl-bottom">
-              <button class="kl-btn kl-btn-outline" onclick="startMusic()">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="14" height="14"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
-                Tocar música
-              </button>
-              <span class="kl-badge kl-badge-pending">Pendiente</span>
-            </div>
-            <div class="key-open-face kl-bottom hidden">
-              <div class="kl-info-box">
-                <p class="kl-open-msg">Ahora sí… algunas cosas se sienten mejor con música.</p>
+              <div class="km-vinyl-wrap">
+                <div class="km-vinyl" id="kmVinyl"></div>
               </div>
-              <div class="kl-unlocked-footer">
+              <button class="km-play-btn" id="kmPlayBtn" onclick="MusicKey.play()">
+                <svg viewBox="0 0 24 24" fill="currentColor" width="15" height="15"><path d="M8 5v14l11-7z"/></svg>
+                Reproducir canción
+              </button>
+              <div class="km-progress-wrap">
+                <div class="km-progress-fill" id="kmProgressFill"></div>
+              </div>
+              <p class="km-listening-msg hidden" id="kmListeningMsg">Escucha un poquito… esta canción está abriendo algo especial.</p>
+            </div>
+
+            <!-- Estado desbloqueado: playlist -->
+            <div class="key-open-face kl-bottom hidden">
+              <div class="km-unlocked-msg">
+                <p class="km-unlock-title">Playlist desbloqueada</p>
+                <p class="km-unlock-sub">Estas canciones las guardé porque de alguna forma me recuerdan a ti.</p>
+              </div>
+              <button class="km-open-playlist-btn" id="kmOpenPlaylistBtn" onclick="MusicKey.openPlaylist()">Abrir playlist</button>
+              <div class="km-playlist-section" id="kmPlaylistSection">
+                <div class="km-playlist-inner">
+                  <div class="km-playlist" id="kmPlaylistContainer"></div>
+                  <p class="km-playlist-footer">Este no es solo un grupo de canciones. Es una forma de decirte que hay momentos, letras y sonidos que me hacen pensar en ti.</p>
+                </div>
+              </div>
+              <div class="kl-unlocked-footer" style="margin-top:12px;">
                 <span class="kl-badge kl-badge-ok"><span class="kl-ok-check">✓</span> Desbloqueada</span>
                 <span class="kl-sparkle-deco">✦ ✦</span>
               </div>
@@ -564,81 +578,111 @@
 
     </section>
 
-    <!-- Frases de amor aleatorias -->
-    <section class="section">
-      <div class="glass-card">
-        <div class="card-icon">💌</div>
-        <h2 class="card-title">Algo que necesitas saber</h2>
-        <div class="love-phrase-box">
-          <p class="love-phrase" id="lovePhrase" aria-live="polite">Presiona y recibe amor ✨</p>
-        </div>
-        <button class="btn btn-secondary pulse" onclick="showLovePhrase(this)">Dame una frase de amor 💕</button>
-      </div>
-    </section>
+    <!-- Audio + Video -->
+    <section class="section av-section">
 
-    <!-- Audio -->
-    <section class="section">
-      <div class="glass-card">
-        <div class="card-icon">🎧</div>
-        <h2 class="card-title">Mi voz, solo para ti</h2>
-        <p class="card-desc">Grabé esto pensando solo en ti.</p>
-        <button class="btn btn-primary" id="playBtn" onclick="toggleAudio(this)">Escuchar mi voz 🎧</button>
+      <div class="av-card av-audio-card">
+        <div class="av-top-bar av-audio-bar"></div>
+        <div class="av-card-body">
+          <div class="av-icon-circle av-audio-circle">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" width="26" height="26" aria-hidden="true">
+              <path d="M3 18v-6a9 9 0 0 1 18 0v6"/>
+              <path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/>
+            </svg>
+          </div>
+          <div class="av-text">
+            <h2 class="av-title">Mi voz, solo para ti</h2>
+            <p class="av-desc">Grabé esto pensando solo en ti.</p>
+          </div>
+        </div>
+        <button class="av-btn av-audio-btn" id="playBtn" onclick="toggleAudio(this)">Escuchar mi voz</button>
         <audio id="audioPlayer" src="audio/audio 01.ogg" preload="none"></audio>
         <div class="audio-progress hidden" id="audioProgress">
           <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
           <span class="audio-time" id="audioTime">0:00</span>
         </div>
       </div>
-    </section>
 
-    <!-- Video -->
-    <section class="section">
-      <div class="glass-card">
-        <div class="card-icon">🎥</div>
-        <h2 class="card-title">Un mensaje que grabé para ti</h2>
-        <p class="card-desc">Cuando lo veas, sé que lo vas a sentir.</p>
-        <button class="btn btn-primary" onclick="showVideo(this)">Ver video sorpresa 🎥</button>
+      <div class="av-card av-video-card">
+        <div class="av-top-bar av-video-bar"></div>
+        <div class="av-card-body">
+          <div class="av-icon-circle av-video-circle">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" width="26" height="26" aria-hidden="true">
+              <polygon points="23 7 16 12 23 17 23 7"/>
+              <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+            </svg>
+          </div>
+          <div class="av-text">
+            <h2 class="av-title">Un mensaje que grabé para ti</h2>
+            <p class="av-desc">Cuando lo veas, sé que lo vas a sentir.</p>
+          </div>
+        </div>
+        <button class="av-btn av-video-btn" onclick="showVideo(this)">Ver video sorpresa</button>
         <div class="video-container hidden" id="videoContainer">
           <video id="videoPlayer" src="video/mensaje.mp4" controls playsinline preload="none"></video>
         </div>
       </div>
+
     </section>
 
-    <!-- Línea del tiempo -->
-    <section class="section">
-      <h2 class="section-title">✦ Nuestra historia</h2>
-      <div class="glass-card">
-        <div class="timeline" role="list">
-          <div class="timeline-item" role="listitem">
-            <div class="timeline-dot"></div>
-            <div class="timeline-content"><span class="timeline-label">04</span><p>Nuestro mes especial</p></div>
-          </div>
-          <div class="timeline-item" role="listitem">
-            <div class="timeline-dot"></div>
-            <div class="timeline-content"><span class="timeline-label">✨</span><p>El día que llegaste a mi vida</p></div>
-          </div>
-          <div class="timeline-item" role="listitem">
-            <div class="timeline-dot"></div>
-            <div class="timeline-content"><span class="timeline-label">💡</span><p>El día que entendí cuánto te amo</p></div>
-          </div>
-          <div class="timeline-item" role="listitem">
-            <div class="timeline-dot"></div>
-            <div class="timeline-content"><span class="timeline-label">🌸</span><p>Hoy — el día que quiero sanar contigo</p></div>
-          </div>
-        </div>
-      </div>
-    </section>
 
-    <!-- Botón final -->
-    <section class="section">
-      <div class="glass-card final-card">
-        <div class="card-icon">💍</div>
-        <p class="final-message">"Geraldine, no te pido que olvides todo de golpe… solo te pido una oportunidad para demostrarte que puedo amarte mejor."</p>
-        <button class="btn btn-primary btn-final pulse" onclick="showFinalMessage(this)">Presiona si me das una oportunidad ❤️</button>
-        <div class="final-response hidden" id="finalResponse" aria-live="polite">
-          <p>Gracias por llegar hasta aquí. Te amo ❤️</p>
+    <!-- ✦ Expediente secreto -->
+    <section class="section exp-section" id="expedienteSection">
+
+      <div class="exp-header">
+        <div class="exp-stamp-row"><span class="exp-stamp">CLASIFICADO</span></div>
+        <h2 class="exp-title">Expediente secreto</h2>
+        <p class="exp-intro">Hay recuerdos que estaban conectados desde el inicio…</p>
+      </div>
+
+      <div class="exp-board" id="expBoard">
+        <svg class="exp-svg" id="expSvg" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"></svg>
+
+        <div class="exp-clue exp-left locked" id="expClue0" data-index="0" onclick="Expediente.tap(0)">
+          <div class="exp-pin"></div>
+          <span class="exp-num">PISTA 01</span>
+          <h3 class="exp-clue-title">El día que todo empezó</h3>
+          <p class="exp-clue-msg">Fue un momento simple, pero algo en mí supo desde ese instante que eras especial.</p>
+        </div>
+
+        <div class="exp-clue exp-right locked" id="expClue1" data-index="1" onclick="Expediente.tap(1)">
+          <div class="exp-pin"></div>
+          <span class="exp-num">PISTA 02</span>
+          <h3 class="exp-clue-title">Una foto que no debía faltar</h3>
+          <p class="exp-clue-msg">Hay imágenes que no necesitan palabras. Solo se sienten, y esta eres tú.</p>
+        </div>
+
+        <div class="exp-clue exp-left locked" id="expClue2" data-index="2" onclick="Expediente.tap(2)">
+          <div class="exp-pin"></div>
+          <span class="exp-num">PISTA 03</span>
+          <h3 class="exp-clue-title">Una frase que solo tú entenderías</h3>
+          <p class="exp-clue-msg">«Tú eres mi lugar favorito en el mundo.»</p>
+        </div>
+
+        <div class="exp-clue exp-right locked" id="expClue3" data-index="3" onclick="Expediente.tap(3)">
+          <div class="exp-pin"></div>
+          <span class="exp-num">PISTA 04</span>
+          <h3 class="exp-clue-title">El lugar donde me hiciste sonreír</h3>
+          <p class="exp-clue-msg">No importa dónde estemos. Contigo, cualquier lugar es el correcto.</p>
+        </div>
+
+        <div class="exp-clue exp-left locked" id="expClue4" data-index="4" onclick="Expediente.tap(4)">
+          <div class="exp-pin"></div>
+          <span class="exp-num">PISTA 05</span>
+          <h3 class="exp-clue-title">La pista final</h3>
+          <p class="exp-clue-msg">Este era el expediente más fácil de resolver… porque la respuesta siempre fuiste tú.</p>
         </div>
       </div>
+
+      <div class="exp-reveal hidden" id="expReveal">
+        <p class="exp-scare" id="expScare">Te encontré…</p>
+        <p class="exp-romantic hidden" id="expRomantic">En todos los caminos, siempre llego a ti.</p>
+        <div class="exp-closed-wrap hidden" id="expClosedWrap">
+          <p class="exp-closed-txt">Caso cerrado: ganaste una sorpresa.</p>
+          <button class="exp-open-btn" onclick="Expediente.openSurprise()">Abrir sorpresa</button>
+        </div>
+      </div>
+
     </section>
 
     <footer class="footer"><p>Hecho con todo mi amor para ti 💕</p></footer>
@@ -682,6 +726,53 @@
         <div class="kp-modal-divider"></div>
         <p class="kp-modal-sub">Tu sonrisa era la contraseña desde el inicio.</p>
       </div>
+    </div>
+  </div>
+
+  <!-- Dark overlay: Expediente -->
+  <div class="exp-dark-overlay" id="expDarkOverlay" aria-hidden="true"></div>
+
+  <!-- Modal: Expediente sorpresa -->
+  <div class="exp-modal-overlay hidden" id="expModal" aria-modal="true" role="dialog">
+    <div class="exp-modal-box exp-modal-romantic">
+      <button class="exp-modal-close exp-modal-close-light" onclick="Expediente.closeModal()" aria-label="Cerrar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+      <p class="exp-modal-tag">SORPRESA</p>
+      <h3 class="exp-modal-title exp-modal-title-light">Para ti, Geraldine</h3>
+      <div class="exp-modal-divider exp-modal-divider-rose"></div>
+
+      <!-- Fase 1: Video -->
+      <div id="expVideoPhase">
+        <div class="exp-video-wrap">
+          <video id="expSurpriseVid"
+                 src="video/toy%20story.mp4"
+                 playsinline preload="auto"
+                 onended="Expediente.videoEnded()"
+                 class="exp-surprise-vid"></video>
+          <div class="exp-vid-overlay" id="expVidOverlay" onclick="Expediente.playVideo()">
+            <div class="exp-play-circle">
+              <svg viewBox="0 0 24 24" fill="currentColor" width="28" height="28"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            </div>
+            <p class="exp-vid-hint">Toca para ver tu sorpresa</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Fase 2: Ticket (aparece al terminar el video) -->
+      <div id="expTicketPhase" class="hidden exp-ticket-phase">
+        <p class="exp-ticket-intro">Una salida especial te espera…</p>
+        <img src="img/ticket%20de%20cine.jpg" class="exp-ticket-img" alt="Ticket de cine" draggable="false"/>
+        <p class="exp-ticket-msg">Porque mereces noches de película y palomitas conmigo.</p>
+        <div class="exp-claim-wrap">
+          <p class="exp-claim-label">Película: <strong>Toy Story</strong></p>
+          <button class="exp-claim-btn" onclick="Expediente.claimTicket()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" width="17" height="17" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+            Canjear por WhatsApp
+          </button>
+        </div>
+      </div>
+
     </div>
   </div>
 

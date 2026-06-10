@@ -1264,8 +1264,140 @@ const PhotoKey = (() => {
   return { init, handleUpload, openModal, closeModal };
 })();
 
-/* Llave 3 — Música (llamada desde startMusic) */
-function unlockMusicKey() { unlockKey('music'); }
+/* ============================================
+   LLAVE DE NUESTRA PLAYLIST
+   ============================================ */
+
+/* --- Edita aquí las canciones de la playlist --- */
+const playlistGift = [
+  {
+    title: "A Dios Le Pido",
+    artist: "Juanes",
+    note: "Esta la guardé porque sus palabras dicen todo lo que yo quisiera decirte.",
+    url: "https://www.youtube.com/results?search_query=Juanes+A+Dios+Le+Pido"
+  },
+  {
+    title: "Perfect",
+    artist: "Ed Sheeran",
+    note: "Esta la guardé para cuando te extraño y quiero que sepas que eres perfecta.",
+    url: "https://www.youtube.com/results?search_query=Ed+Sheeran+Perfect+official"
+  },
+  {
+    title: "Eres Tú",
+    artist: "Marco Antonio Solís",
+    note: "Cada vez que la escucho pienso en ti. Así de simple.",
+    url: "https://www.youtube.com/results?search_query=Marco+Antonio+Solis+Eres+Tu"
+  },
+  {
+    title: "Te Amo",
+    artist: "Franco de Vita",
+    note: "Esta suena como un momento bonito contigo, de esos que no se olvidan.",
+    url: "https://www.youtube.com/results?search_query=Franco+de+Vita+Te+Amo"
+  },
+  {
+    title: "Can't Help Falling in Love",
+    artist: "Elvis Presley",
+    note: "Clásica, romántica, tuya.",
+    url: "https://www.youtube.com/results?search_query=Elvis+Presley+Cant+Help+Falling+In+Love"
+  }
+];
+
+const MusicKey = (() => {
+  const LS_KEY   = 'km_unlocked';
+  const SECONDS  = 12;
+  let _playing   = false;
+  let _unlocked  = false;
+  let _elapsed   = 0;
+  let _timer     = null;
+
+  function isUnlocked() { return _unlocked; }
+
+  function init() {
+    _unlocked = localStorage.getItem(LS_KEY) === '1';
+    if (_unlocked && !keysState.music) unlockKey('music');
+    else if (_unlocked) _renderPlaylist();
+  }
+
+  function play() {
+    if (_playing) { _pause(); return; }
+    bgMusic.volume = 0.5;
+    bgMusic.play().then(() => {
+      musicaActiva = true;
+      _playing = true;
+      document.getElementById('kmVinyl')?.classList.add('km-spinning');
+      document.getElementById('kmListeningMsg')?.classList.remove('hidden');
+      _setPlayBtn(true);
+      _timer = setInterval(_tick, 1000);
+    }).catch(() => {});
+  }
+
+  function _pause() {
+    bgMusic.pause();
+    musicaActiva = false;
+    _playing = false;
+    clearInterval(_timer);
+    document.getElementById('kmVinyl')?.classList.remove('km-spinning');
+    document.getElementById('kmListeningMsg')?.classList.add('hidden');
+    _setPlayBtn(false);
+  }
+
+  function _setPlayBtn(isPlaying) {
+    const btn = document.getElementById('kmPlayBtn');
+    if (!btn) return;
+    const icon = '<svg viewBox="0 0 24 24" fill="currentColor" width="15" height="15"><path d="M8 5v14l11-7z"/></svg>';
+    const pauseIcon = '<svg viewBox="0 0 24 24" fill="currentColor" width="15" height="15"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>';
+    btn.innerHTML = (isPlaying ? pauseIcon + ' Pausar' : icon + ' Reproducir canción');
+  }
+
+  function _tick() {
+    if (!musicaActiva) { _playing = false; clearInterval(_timer); document.getElementById('kmVinyl')?.classList.remove('km-spinning'); _setPlayBtn(false); return; }
+    _elapsed++;
+    const pct = Math.min(100, (_elapsed / SECONDS) * 100);
+    const fill = document.getElementById('kmProgressFill');
+    if (fill) fill.style.width = pct + '%';
+    if (!_unlocked && _elapsed >= SECONDS) {
+      _unlocked = true;
+      localStorage.setItem(LS_KEY, '1');
+      clearInterval(_timer);
+      _playing = false;
+      unlockKey('music');
+    }
+  }
+
+  function _renderPlaylist() {
+    const container = document.getElementById('kmPlaylistContainer');
+    if (!container || container.children.length > 0) return;
+    playlistGift.forEach((song, i) => {
+      const card = document.createElement('div');
+      card.className = 'km-song-card';
+      card.style.animationDelay = (i * 0.08) + 's';
+      card.innerHTML = `
+        <span class="km-song-num">canción ${String(i + 1).padStart(2, '0')}</span>
+        <p class="km-song-title">${song.title}</p>
+        <p class="km-song-artist">${song.artist}</p>
+        <p class="km-song-note">${song.note}</p>
+        ${song.url ? `<button class="km-listen-btn" onclick="window.open('${song.url}','_blank')">Escuchar</button>` : ''}
+      `;
+      container.appendChild(card);
+    });
+  }
+
+  function openPlaylist() {
+    _renderPlaylist();
+    const section = document.getElementById('kmPlaylistSection');
+    const btn     = document.getElementById('kmOpenPlaylistBtn');
+    if (!section) return;
+    const isOpen = section.classList.toggle('km-pl-open');
+    if (btn) btn.textContent = isOpen ? 'Cerrar playlist' : 'Abrir playlist';
+  }
+
+  return { init, play, openPlaylist, isUnlocked };
+})();
+
+/* Llave 3 — Música */
+function unlockMusicKey() {
+  if (MusicKey.isUnlocked()) unlockKey('music');
+}
 
 /* Llave 4 — Palabra secreta */
 /* ============================================
@@ -1416,12 +1548,202 @@ const RetoCupon = (() => {
   return { init, unlock, nextStep, prevStep, prepareCapture, sendWhatsApp, reset };
 })();
 
+/* ============================================================
+   EXPEDIENTE SECRETO
+   ============================================================ */
+const Expediente = (() => {
+  const LS_KEY = 'exp_progress';
+  const TOTAL = 5;
+  let progress = 0;
+
+  function init() {
+    progress = parseInt(localStorage.getItem(LS_KEY) || '0');
+    _applyStates();
+    requestAnimationFrame(() => requestAnimationFrame(_buildLines));
+    window.addEventListener('resize', _buildLines);
+  }
+
+  function _applyStates() {
+    for (let i = 0; i < TOTAL; i++) {
+      const el = document.getElementById(`expClue${i}`);
+      if (!el) continue;
+      el.classList.remove('locked', 'ready', 'revealed');
+      if (i < progress) {
+        el.classList.add('revealed');
+      } else if (i === progress) {
+        el.classList.add('ready');
+        if (!el.querySelector('.exp-tap-hint')) {
+          const h = document.createElement('span');
+          h.className = 'exp-tap-hint';
+          h.textContent = 'TOCAR PARA REVELAR';
+          el.appendChild(h);
+        }
+      } else {
+        el.classList.add('locked');
+      }
+    }
+    if (progress >= TOTAL) _showRevealInstant();
+  }
+
+  function _buildLines() {
+    const svg = document.getElementById('expSvg');
+    if (!svg) return;
+    const board = document.getElementById('expBoard');
+    if (!board) return;
+    const bRect = board.getBoundingClientRect();
+    svg.innerHTML = '';
+    const clues = board.querySelectorAll('.exp-clue');
+    const pts = Array.from(clues).map(el => {
+      const r = el.getBoundingClientRect();
+      return { x: r.left - bRect.left + r.width / 2, y: r.top - bRect.top + r.height / 2 };
+    });
+    for (let i = 0; i < pts.length - 1; i++) {
+      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      line.setAttribute('x1', pts[i].x);
+      line.setAttribute('y1', pts[i].y);
+      line.setAttribute('x2', pts[i + 1].x);
+      line.setAttribute('y2', pts[i + 1].y);
+      line.setAttribute('class', 'exp-line' + (i < progress - 1 ? ' active' : ''));
+      line.dataset.li = i;
+      svg.appendChild(line);
+    }
+  }
+
+  function _activateLine(i) {
+    const svg = document.getElementById('expSvg');
+    if (!svg) return;
+    const line = svg.querySelector(`[data-li="${i}"]`);
+    if (line) line.classList.add('active');
+  }
+
+  function tap(index) {
+    if (index !== progress) return;
+    const el = document.getElementById(`expClue${index}`);
+    if (!el) return;
+    const hint = el.querySelector('.exp-tap-hint');
+    if (hint) hint.remove();
+    el.classList.remove('ready');
+    el.classList.add('revealed');
+    progress++;
+    localStorage.setItem(LS_KEY, progress);
+    if (index < TOTAL - 1) setTimeout(() => _activateLine(index), 260);
+    if (progress < TOTAL) {
+      setTimeout(() => {
+        const next = document.getElementById(`expClue${progress}`);
+        if (!next) return;
+        next.classList.remove('locked');
+        next.classList.add('ready');
+        if (!next.querySelector('.exp-tap-hint')) {
+          const h = document.createElement('span');
+          h.className = 'exp-tap-hint';
+          h.textContent = 'TOCAR PARA REVELAR';
+          next.appendChild(h);
+        }
+      }, 420);
+    }
+    if (progress >= TOTAL) setTimeout(_startRevealSequence, 700);
+  }
+
+  function _startRevealSequence() {
+    const board = document.getElementById('expBoard');
+    if (board) { board.classList.add('shaking'); setTimeout(() => board.classList.remove('shaking'), 700); }
+    const overlay = document.getElementById('expDarkOverlay');
+    if (overlay) { overlay.classList.add('show'); setTimeout(() => overlay.classList.remove('show'), 1100); }
+    setTimeout(() => {
+      const reveal = document.getElementById('expReveal');
+      if (reveal) { reveal.classList.remove('hidden'); reveal.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+      setTimeout(() => {
+        const romantic = document.getElementById('expRomantic');
+        if (romantic) romantic.classList.remove('hidden');
+        setTimeout(() => {
+          const closedWrap = document.getElementById('expClosedWrap');
+          if (closedWrap) closedWrap.classList.remove('hidden');
+        }, 2100);
+      }, 2200);
+    }, 1100);
+  }
+
+  function _showRevealInstant() {
+    ['expReveal', 'expRomantic', 'expClosedWrap'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.classList.remove('hidden');
+    });
+  }
+
+  function openSurprise() {
+    const m = document.getElementById('expModal');
+    if (m) m.classList.remove('hidden');
+    if (musicaActiva) { bgMusic.pause(); }
+    const seen = localStorage.getItem('exp_ticket_seen');
+    if (seen) {
+      _showTicket(false);
+    } else {
+      document.getElementById('expVideoPhase').classList.remove('hidden');
+      document.getElementById('expTicketPhase').classList.add('hidden');
+      const vid = document.getElementById('expSurpriseVid');
+      if (vid) {
+        vid.play().then(() => {
+          const ov = document.getElementById('expVidOverlay');
+          if (ov) ov.classList.add('hidden');
+        }).catch(() => {/* overlay stays visible for tap */});
+      }
+    }
+  }
+
+  function playVideo() {
+    const vid = document.getElementById('expSurpriseVid');
+    const ov  = document.getElementById('expVidOverlay');
+    if (vid) vid.play();
+    if (ov)  ov.classList.add('hidden');
+  }
+
+  function videoEnded() {
+    localStorage.setItem('exp_ticket_seen', '1');
+    _showTicket(true);
+  }
+
+  function _showTicket(animate) {
+    const vp = document.getElementById('expVideoPhase');
+    const tp = document.getElementById('expTicketPhase');
+    if (vp) vp.classList.add('hidden');
+    if (tp) {
+      tp.classList.remove('hidden');
+      if (!animate) tp.style.animation = 'none';
+    }
+  }
+
+  function closeModal() {
+    const m = document.getElementById('expModal');
+    if (m) m.classList.add('hidden');
+    const vid = document.getElementById('expSurpriseVid');
+    if (vid && !vid.paused) vid.pause();
+    if (musicaActiva) bgMusic.play().catch(() => {});
+  }
+
+  async function claimTicket() {
+    const msg = '¡Quiero canjear mi ticket! Una cita de Toy Story juntos 🎬🎟️';
+    try {
+      const res = await fetch('img/ticket%20de%20cine.jpg');
+      const blob = await res.blob();
+      const file = new File([blob], 'ticket-toy-story.jpg', { type: 'image/jpeg' });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({ files: [file], text: msg, title: 'Ticket: Toy Story' });
+        return;
+      }
+    } catch (e) {}
+    window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+  }
+
+  return { init, tap, openSurprise, closeModal, playVideo, videoEnded, claimTicket };
+})();
+
 document.addEventListener('DOMContentLoaded', () => {
   TimeKey.init();
   PhotoKey.init();
   RetoCupon.init();
-  // Si la música ya está activa al cargar (autoplay exitoso)
+  MusicKey.init();
   if (musicaActiva) unlockMusicKey();
+  Expediente.init();
 });
 
 /* Toggle llaves de mi corazón */
@@ -1433,17 +1755,23 @@ function toggleKeys() {
   const isOpen = body.classList.toggle('open');
   btn.setAttribute('aria-expanded', isOpen);
   label.textContent = isOpen ? 'Cerrar las llaves' : 'Abrir las llaves';
+  const img = document.getElementById('klHeaderImg');
   if (isOpen) {
     if (bgMusic) bgMusic.volume = 0.1;
+    if (img) img.classList.add('kl-dancing');
     if (audio) {
       audio.loop = false;
       audio.currentTime = 0;
       audio.volume = 0.6;
       audio.play().catch(() => {});
-      audio.onended = () => { if (bgMusic) bgMusic.volume = 0.5; };
+      audio.onended = () => {
+        if (bgMusic) bgMusic.volume = 0.5;
+        if (img) img.classList.remove('kl-dancing');
+      };
     }
   } else {
     if (audio) { audio.pause(); audio.currentTime = 0; audio.onended = null; }
+    if (img) img.classList.remove('kl-dancing');
   }
 }
 
