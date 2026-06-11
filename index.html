@@ -101,7 +101,7 @@
         <!-- Error -->
         <div class="error-box hidden" id="errorBox">
           <div class="error-icon-circle">!</div>
-          <p class="error-text">Esa no es la llave correcta... Intenta con algo que solo tú y yo sabemos.</p>
+          <p class="error-text">Casi... otra vez ✨</p>
         </div>
 
       </div><!-- /.pw-card -->
@@ -186,7 +186,7 @@
       <!-- Ogro guardián -->
       <div class="ogro-scene">
         <div id="ogroGuardian" class="ogro-wrap ogro-hidden">
-          <div class="ogro-bubble" id="ogroBubble">¡Hmph! ¿Crees que puedes leer esta carta así nomás? ¡Primero responde mis preguntas! 😤</div>
+          <div class="ogro-bubble" id="ogroBubble">¡Eeeh! ¡Espera, espera, ESPERA! ¿A dónde crees que vas? ¡Primero tienes que responder mis preguntas! 🫏</div>
           <div class="ogro-img ogro-loop-wrap" id="ogroLoopWrap">
             <img src="img/bucle-ogro/burrito.png" class="ogro-loop-img ogro-loop-active" id="ogroImgBurrito" alt="" draggable="false"/>
             <img src="img/bucle-ogro/ogro.png"    class="ogro-loop-img" id="ogroImg0" alt="" draggable="false"/>
@@ -217,7 +217,7 @@
       </div>
       <div class="letter-body" id="letterBody">
         <p id="letterText"></p>
-        <button class="letter-close-btn" onclick="closeLetter()">Guardar carta</button>
+        <button type="button" class="letter-close-btn" onclick="closeLetter()">Guardar carta</button>
       </div>
     </section>
 
@@ -689,6 +689,76 @@
         </div>
       </div>
 
+    </section>
+
+    <!-- ✦ Nuestro tiempo juntos -->
+    <section class="section nt-section" id="ntSection">
+      <h2 class="section-title">✦ Nuestro tiempo</h2>
+
+      <!-- Configuración -->
+      <div class="nt-setup" id="ntSetup">
+        <p class="nt-eyebrow">El comienzo de todo</p>
+        <p class="nt-setup-title">¿Cuándo empezó nuestra historia?</p>
+
+        <div class="nt-names">
+          <div class="nt-field">
+            <label for="ntN1">Tú</label>
+            <input id="ntN1" type="text" placeholder="Tu nombre" maxlength="14" autocomplete="off"/>
+          </div>
+          <span class="nt-y">❤</span>
+          <div class="nt-field">
+            <label for="ntN2">Tu amor</label>
+            <input id="ntN2" type="text" placeholder="Su nombre" maxlength="14" autocomplete="off"/>
+          </div>
+        </div>
+
+        <div class="nt-field">
+          <label for="ntFecha">El día en que todo empezó</label>
+          <input id="ntFecha" type="date"/>
+        </div>
+
+        <button type="button" class="nt-btn" id="ntBtnSave">Empezar a contar ✨</button>
+      </div>
+
+      <!-- Contador -->
+      <div class="nt-counter hidden" id="ntCounter">
+        <p class="nt-eyebrow">Llevamos juntos</p>
+        <p class="nt-pareja" id="ntPareja"></p>
+        <p class="nt-subtitle">y el tiempo no deja de correr a tu lado</p>
+
+        <div class="nt-ring-wrap">
+          <svg class="nt-ring" viewBox="0 0 240 240" aria-hidden="true">
+            <defs>
+              <linearGradient id="ntGrad" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%"   stop-color="#C6285B"/>
+                <stop offset="55%"  stop-color="#E94E77"/>
+                <stop offset="100%" stop-color="#F5D880"/>
+              </linearGradient>
+            </defs>
+            <circle class="nt-ring-bg"  cx="120" cy="120" r="104"/>
+            <circle class="nt-ring-fg"  cx="120" cy="120" r="104" id="ntRingFg"/>
+          </svg>
+          <div class="nt-ring-center">
+            <span class="nt-heart">❤</span>
+            <span class="nt-pct" id="ntPct">0%</span>
+            <span class="nt-pct-lbl">hacia un mes más</span>
+          </div>
+        </div>
+
+        <div class="nt-grid">
+          <div class="nt-cell"><div class="nt-num" id="ntAnios">0</div><div class="nt-et">Años</div></div>
+          <div class="nt-cell"><div class="nt-num" id="ntMeses">0</div><div class="nt-et">Meses</div></div>
+          <div class="nt-cell"><div class="nt-num" id="ntDias">0</div><div class="nt-et">Días</div></div>
+          <div class="nt-cell"><div class="nt-num" id="ntHoras">0</div><div class="nt-et">Horas</div></div>
+          <div class="nt-cell"><div class="nt-num" id="ntMin">0</div><div class="nt-et">Minutos</div></div>
+          <div class="nt-cell nt-seg"><div class="nt-num" id="ntSeg">0</div><div class="nt-et">Segundos</div></div>
+        </div>
+
+        <div class="nt-total">Eso son <b id="ntTotal">0</b> días eligiéndonos 💗</div>
+        <p class="nt-desde" id="ntDesde"></p>
+
+        <button type="button" class="nt-edit" id="ntBtnEdit">Cambiar la fecha</button>
+      </div>
     </section>
 
     <footer class="footer"><p>Hecho con todo mi amor para ti 💕</p></footer>

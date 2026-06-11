@@ -309,7 +309,7 @@ function initBackground() {
 /* ============================================
    CONTRASEÑA
    ============================================ */
-const CLAVE_CORRECTA = ''; // contraseña desactivada temporalmente
+const CLAVE_CORRECTA = 'geraldine';
 let claveVisible = false;
 
 function checkPassword() {
@@ -320,10 +320,6 @@ function checkPassword() {
   const reveal   = document.getElementById('keyReveal');
   const btnText  = document.getElementById('openBtnText');
 
-  // Contraseña desactivada — entra directo
-  unlockPage();
-  return;
-
   if (!claveVisible) {
     claveVisible = true;
     reveal.classList.add('open');
@@ -332,7 +328,7 @@ function checkPassword() {
     return;
   }
 
-  const val = input.value.trim();
+  const val = input.value.trim().toLowerCase();
   if (val === CLAVE_CORRECTA) {
     errorBox.classList.add('hidden');
     if (!musicaActiva) startMusic();
@@ -488,13 +484,24 @@ function toggleMusic() {
 
 bgMusic.volume = 0.5;
 
+let _lastBtnSfx = 0;
 function playBtnSfx() {
+  const now = Date.now();
+  if (now - _lastBtnSfx < 120) return;
+  _lastBtnSfx = now;
   const sfx = document.getElementById('btnSfx');
   if (!sfx) return;
   sfx.volume = 1.0;
   sfx.currentTime = 0;
   sfx.play().catch(() => {});
 }
+
+document.addEventListener('click', (e) => {
+  const btn = e.target.closest('button, [data-sfx], .start-btn, .nt-btn, .nt-edit, .exp-open-btn');
+  if (!btn) return;
+  if (btn.dataset.noSfx !== undefined) return;
+  playBtnSfx();
+}, true);
 
 /* ============================================
    HELPERS — VIBRAR, CORAZONES, DESTELLOS
@@ -518,6 +525,31 @@ function lanzarCorazones(origen, count = 10) {
     el.style.setProperty('--re', (Math.random() - 0.5) * 60 + 'deg');
     cont.appendChild(el);
     setTimeout(() => el.remove(), 2300);
+  }
+}
+
+function lanzarEstrellasDesdImg(origen, count = 22) {
+  const cont = document.getElementById('heartsContainer');
+  if (!cont) return;
+  const rect = origen.getBoundingClientRect();
+  const cx   = rect.left + rect.width  / 2;
+  const cy   = rect.top  + rect.height / 2;
+  const chars = ['★','✦','✧','✶','⭐'];
+  for (let i = 0; i < count; i++) {
+    const el  = document.createElement('div');
+    const ang = Math.random() * Math.PI * 2;
+    const d   = 70 + Math.random() * 130;
+    el.className = 'kl-star-spark';
+    el.textContent = chars[Math.floor(Math.random() * chars.length)];
+    el.style.left   = cx + 'px';
+    el.style.top    = cy + 'px';
+    el.style.fontSize = (9 + Math.random() * 13) + 'px';
+    el.style.setProperty('--dur',  (0.9 + Math.random() * 0.8) + 's');
+    el.style.setProperty('--sx',   Math.cos(ang) * d + 'px');
+    el.style.setProperty('--sy',   Math.sin(ang) * d - 55 + 'px');
+    el.style.animationDelay = (Math.random() * 0.3) + 's';
+    cont.appendChild(el);
+    setTimeout(() => el.remove(), 2200);
   }
 }
 
@@ -601,19 +633,19 @@ const OGRO_PREGUNTAS = OGRO_POOL
   .slice().sort(() => Math.random() - 0.5)
   .slice(0, 6);
 const OGRO_RESPUESTAS_MAL = [
-  '¡Mentira! Los que aman de verdad no dudan.',
-  '¡No me convences! Vuelve cuando seas honesta.',
-  '¡Eso no es amor, eso es confusión! Piénsalo bien.',
-  '¡El corazón no miente! Inténtalo de nuevo.'
+  '¡Eeeh, NO! ¡Eso no, eso no! ¡El corazón no miente, pero tú sí intentas! 🫏',
+  '¡Ay por favor! ¡Hasta yo que soy un burro sé que eso no es verdad! Inténtalo de nuevo. 😤',
+  '¡No no no no NO! ¡Eso es lo más falso que he escuchado en mi vida, y eso que yo hablo MUCHO! 🫏',
+  '¡Oye! ¡Que yo no nací ayer! ¡Vamos, otra vez con el corazón! ❤️'
 ];
 let _idxMal = 0;
 const OGRO_RESPUESTAS_BIEN = [
-  'Mmm... tal vez... ¡pero no te confíes! Aún me quedan preguntas 😒',
-  'Hmph... eso es algo... pero no te relajes todavía 😤',
-  'Bueno... algo de razón tienes... ¡pero aún no termino! 👀',
-  'Voy creyéndote un poco... ¡pero siguen las preguntas! 😤',
-  '¡Casi casi! Solo una más... y más te vale contestar bien 😒',
-  'Está bien, está bien... supongo que sí lo amas de verdad 💛\n¡Pero como le hagas daño, vuelvo! 👊'
+  'Mmm... bueno, eso estuvo bien... ¡pero no te emociones, que aún me quedan preguntas! 🫏',
+  '¡Oye, no está mal! Casi me convences... ¡casi! Sigue, sigue. 👀',
+  'Ehhh... está bien, te creo esa. ¡Pero no bajes la guardia, que yo soy muy listo! 😏',
+  'Wow. Eso sí me llegó al corazón... que yo también tengo, ¿eh? ¡Una más! 💛',
+  '¡Eso, ESO! ¡Casi casi! Una última pregunta y te dejo pasar, lo prometo. 🫏',
+  '...Está bien. Te creo. Lo quieres de verdad. 💛\n¡Pero como le hagas daño, vuelvo a preguntar! 🫏'
 ];
 
 (function initOgro() {
@@ -757,22 +789,30 @@ function openSealedLetter(el) {
   if (el.classList.contains('open')) return;
   el.classList.add('open');
   playBtnSfx();
-
-  // Ocultar la carta sellada y el label superior
-  setTimeout(() => {
-    el.style.display = 'none';
-    const hint = document.getElementById('slHintAbove');
-    if (hint) hint.style.display = 'none';
-  }, 300);
-
-  const body = document.getElementById('letterBody');
-  if (body) {
-    setTimeout(() => {
-      body.style.maxHeight = '3000px';
-    }, 350);
-  }
   lanzarCorazones(el, 7);
   vibrar([25]);
+
+  const hint = document.getElementById('slHintAbove');
+  const body = document.getElementById('letterBody');
+
+  // Hint desaparece suavemente
+  if (hint) gsap.to(hint, { duration: 0.25, opacity: 0, y: -8, ease: 'power1.in',
+    onComplete: () => hint.style.display = 'none' });
+
+  // Card completo: espera a que el sello/cintas inicien su CSS, luego todo el card se va
+  gsap.to(el, {
+    duration: 0.55,
+    x: 320,
+    rotation: 8,
+    opacity: 0,
+    ease: 'power2.in',
+    delay: 0.28,
+    onComplete: () => {
+      el.style.display = 'none';
+      gsap.set(el, { clearProps: 'all' });
+      if (body) body.style.maxHeight = '3000px';
+    }
+  });
 }
 
 function closeLetter() {
@@ -781,22 +821,31 @@ function closeLetter() {
   const body   = document.getElementById('letterBody');
 
   vibrar([20]);
-  if (!body) return;
-
-  const savedY = window.scrollY;
-  document.documentElement.style.scrollBehavior = 'auto';
+  if (!body || !sealed) return;
 
   const tl = gsap.timeline({
     onComplete: () => {
+      document.documentElement.style.overflowAnchor = 'none';
+      document.documentElement.style.scrollBehavior = 'auto';
+
+      sealed.classList.remove('open');
+      sealed.style.display = '';
+      if (hint) hint.style.display = '';
       body.style.maxHeight = '0';
       gsap.set(body, { clearProps: 'all' });
-      window.scrollTo(0, savedY);
-      if (sealed) { sealed.classList.remove('open'); sealed.style.display = ''; }
-      if (hint)   hint.style.display = '';
-      setTimeout(() => {
-        document.documentElement.style.scrollBehavior = '';
-        if (sealed) sealed.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }, 80);
+
+      requestAnimationFrame(() => {
+        const rect = sealed.getBoundingClientRect();
+        const viewportH = window.innerHeight;
+        const desiredViewportY = viewportH * 0.32;
+        const targetScrollY = window.scrollY + rect.top - desiredViewportY;
+        window.scrollTo({ top: Math.max(0, targetScrollY), left: 0, behavior: 'instant' });
+
+        requestAnimationFrame(() => {
+          document.documentElement.style.overflowAnchor = '';
+          document.documentElement.style.scrollBehavior = '';
+        });
+      });
     }
   });
   tl.to(body, { duration: 0.2, y: 10, ease: 'power1.out' })
@@ -1800,7 +1849,11 @@ function toggleKeys() {
   const img = document.getElementById('klHeaderImg');
   if (isOpen) {
     if (bgMusic) bgMusic.volume = 0.1;
-    if (img) img.classList.add('kl-dancing');
+    if (img) {
+      img.classList.add('kl-dancing');
+      lanzarEstrellasDesdImg(img, 22);
+      setTimeout(() => lanzarEstrellasDesdImg(img, 14), 500);
+    }
     if (audio) {
       audio.loop = false;
       audio.currentTime = 0;
@@ -1949,3 +2002,126 @@ function showFinalMessage(btn) {
     }, w * 230);
   }
 }
+
+/* ============================================
+   NUESTRO TIEMPO (contador circular)
+   ============================================ */
+(function() {
+  const KEY = 'nuestroTiempoData';
+  const RING_LEN = 2 * Math.PI * 104;
+  let inicio = null;
+  let nombres = { n1: '', n2: '' };
+  let timer = null;
+  let mem = null;
+
+  function $(id) { return document.getElementById(id); }
+  function leer() {
+    try { return JSON.parse(localStorage.getItem(KEY)); } catch (e) { return mem; }
+  }
+  function escribir(d) {
+    mem = d;
+    try { localStorage.setItem(KEY, JSON.stringify(d)); } catch (e) {}
+  }
+  function escapar(t) {
+    const d = document.createElement('div');
+    d.textContent = t;
+    return d.innerHTML;
+  }
+
+  function mostrarSetup() {
+    $('ntCounter').classList.add('hidden');
+    $('ntSetup').classList.remove('hidden');
+    if (timer) { clearInterval(timer); timer = null; }
+    const g = leer();
+    if (g) {
+      $('ntN1').value = g.n1 || '';
+      $('ntN2').value = g.n2 || '';
+      $('ntFecha').value = g.fecha || '';
+    }
+  }
+
+  function guardar() {
+    const f = $('ntFecha').value;
+    if (!f) {
+      $('ntFecha').focus({ preventScroll: true });
+      $('ntFecha').style.borderColor = '#C6285B';
+      setTimeout(() => $('ntFecha').style.borderColor = '', 1200);
+      return;
+    }
+    nombres.n1 = $('ntN1').value.trim() || 'Yo';
+    nombres.n2 = $('ntN2').value.trim() || 'Tú';
+    inicio = new Date(f + 'T00:00:00');
+    escribir({ fecha: f, n1: nombres.n1, n2: nombres.n2 });
+    mostrarContador();
+  }
+
+  function mostrarContador() {
+    $('ntSetup').classList.add('hidden');
+    $('ntCounter').classList.remove('hidden');
+    $('ntPareja').innerHTML =
+      escapar(nombres.n1) + '<span class="nt-h">❤</span>' + escapar(nombres.n2);
+    const opts = { day: 'numeric', month: 'long', year: 'numeric' };
+    $('ntDesde').textContent = 'Desde el ' + inicio.toLocaleDateString('es-ES', opts);
+    actualizar();
+    if (timer) clearInterval(timer);
+    timer = setInterval(actualizar, 1000);
+  }
+
+  function actualizar() {
+    const ahora = new Date();
+    let s = ahora.getSeconds()  - inicio.getSeconds();
+    let mi = ahora.getMinutes() - inicio.getMinutes();
+    let h = ahora.getHours()    - inicio.getHours();
+    let d = ahora.getDate()     - inicio.getDate();
+    let me = ahora.getMonth()   - inicio.getMonth();
+    let a = ahora.getFullYear() - inicio.getFullYear();
+    if (s  < 0) { s  += 60; mi--; }
+    if (mi < 0) { mi += 60; h--; }
+    if (h  < 0) { h  += 24; d--; }
+    if (d  < 0) {
+      const dmAnt = new Date(ahora.getFullYear(), ahora.getMonth(), 0).getDate();
+      d += dmAnt; me--;
+    }
+    if (me < 0) { me += 12; a--; }
+
+    $('ntAnios').textContent = a;
+    $('ntMeses').textContent = me;
+    $('ntDias').textContent  = d;
+    $('ntHoras').textContent = h;
+    $('ntMin').textContent   = mi;
+    $('ntSeg').textContent   = s;
+
+    const total = Math.floor((ahora - inicio) / 86400000);
+    $('ntTotal').textContent = total.toLocaleString('es-ES');
+
+    // Progreso hacia próximo aniversario mensual
+    const dia = inicio.getDate();
+    let last = new Date(ahora.getFullYear(), ahora.getMonth(), dia);
+    if (last > ahora) last = new Date(ahora.getFullYear(), ahora.getMonth() - 1, dia);
+    const next = new Date(last.getFullYear(), last.getMonth() + 1, dia);
+    const pct = Math.max(0, Math.min(100, ((ahora - last) / (next - last)) * 100));
+    $('ntPct').textContent = Math.floor(pct) + '%';
+    $('ntRingFg').style.strokeDashoffset = RING_LEN * (1 - pct / 100);
+  }
+
+  function init() {
+    const setup = $('ntSetup');
+    if (!setup) return;
+    $('ntBtnSave').addEventListener('click', guardar);
+    $('ntBtnEdit').addEventListener('click', mostrarSetup);
+
+    const g = leer();
+    if (g && g.fecha) {
+      inicio = new Date(g.fecha + 'T00:00:00');
+      nombres.n1 = g.n1 || 'Yo';
+      nombres.n2 = g.n2 || 'Tú';
+      mostrarContador();
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
