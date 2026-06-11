@@ -1,4 +1,23 @@
 /* ============================================
+   RESET AUTOMÁTICO POR CLIENTE
+   ============================================ */
+(function() {
+  if (!window.CONFIG || !CONFIG.clientId) return;
+  const KEY = '_clientId';
+  const stored = localStorage.getItem(KEY);
+  if (!stored) {
+    // Primera vez con esta versión — solo guardar el ID, no borrar nada
+    localStorage.setItem(KEY, CONFIG.clientId);
+    return;
+  }
+  if (stored === CONFIG.clientId) return;
+  // Carta diferente — borrar datos del cliente anterior
+  localStorage.clear();
+  localStorage.setItem(KEY, CONFIG.clientId);
+  indexedDB.deleteDatabase('MicuritaDB_' + stored);
+})();
+
+/* ============================================
    INTRO MÁGICO
    ============================================ */
 function skipIntro() {
@@ -309,7 +328,7 @@ function initBackground() {
 /* ============================================
    CONTRASEÑA
    ============================================ */
-const CLAVE_CORRECTA = 'geraldine';
+const CLAVE_CORRECTA = ((window.CONFIG && CONFIG.password) || 'geraldine').toLowerCase();
 let claveVisible = false;
 
 function checkPassword() {
@@ -385,7 +404,7 @@ function unlockPage() {
 }
 
 /* ─── Overlay de voz con máquina de escribir ─── */
-const TEXTO_VOZ =
+const TEXTO_VOZ = (window.CONFIG && CONFIG.textoVoz) ||
   'Hola mi amor...\n\nSi estás leyendo esto es porque encontraste esta carta.\n\nHay cosas que quiero decirte desde el corazón...';
 
 function mostrarOverlayVoz() {
@@ -602,7 +621,11 @@ El que siempre va a elegirte.`;
 function initLetterBody() {
   const el = document.getElementById('letterText');
   if (!el) return;
-  el.innerHTML = TEXTO_PERDON.trim().replace(/\n\n/g, '<br><br>').replace(/\n/g, '<br>');
+  const nombre = (window.CONFIG && CONFIG.nombre) || 'amor';
+  const texto = (window.CONFIG && CONFIG.textoCarta)
+    ? CONFIG.textoCarta.replace(/\{nombre\}/g, nombre)
+    : TEXTO_PERDON;
+  el.innerHTML = texto.trim().replace(/\n\n/g, '<br><br>').replace(/\n/g, '<br>');
 }
 
 /* ── Ogro guardián ── */
@@ -904,10 +927,11 @@ const MicuDB = (() => {
   function open() {
     return new Promise((res, rej) => {
       if (_db) { res(_db); return; }
-      const r = indexedDB.open('MicuritaDB', 2);
+      const dbName = 'MicuritaDB_' + ((window.CONFIG && CONFIG.clientId) || 'default');
+      const r = indexedDB.open(dbName, 3);
       r.onupgradeneeded = e => {
         const db = e.target.result;
-        ['videos','photos'].forEach(s => {
+        ['videos','photos','audios'].forEach(s => {
           if (!db.objectStoreNames.contains(s)) db.createObjectStore(s);
         });
       };
@@ -1411,9 +1435,10 @@ const MusicKey = (() => {
 
   function play() {
     if (_playing) { _pause(); return; }
-    bgMusic.volume = 0.5;
-    bgMusic.play().then(() => {
-      musicaActiva = true;
+    const song = document.getElementById('kmSong');
+    if (!song) return;
+    song.currentTime = 0;
+    song.play().then(() => {
       _playing = true;
       document.getElementById('kmVinyl')?.classList.add('km-spinning');
       document.getElementById('kmListeningMsg')?.classList.remove('hidden');
@@ -1423,8 +1448,8 @@ const MusicKey = (() => {
   }
 
   function _pause() {
-    bgMusic.pause();
-    musicaActiva = false;
+    const song = document.getElementById('kmSong');
+    if (song) song.pause();
     _playing = false;
     clearInterval(_timer);
     document.getElementById('kmVinyl')?.classList.remove('km-spinning');
@@ -1441,7 +1466,8 @@ const MusicKey = (() => {
   }
 
   function _tick() {
-    if (!musicaActiva) { _playing = false; clearInterval(_timer); document.getElementById('kmVinyl')?.classList.remove('km-spinning'); _setPlayBtn(false); return; }
+    const song = document.getElementById('kmSong');
+    if (!_playing || (song && song.paused)) { _playing = false; clearInterval(_timer); document.getElementById('kmVinyl')?.classList.remove('km-spinning'); _setPlayBtn(false); return; }
     _elapsed++;
     const pct = Math.min(100, (_elapsed / SECONDS) * 100);
     const fill = document.getElementById('kmProgressFill');
@@ -1452,6 +1478,7 @@ const MusicKey = (() => {
       clearInterval(_timer);
       _playing = false;
       unlockKey('music');
+      _syncStopBtn();
     }
   }
 
@@ -1482,7 +1509,28 @@ const MusicKey = (() => {
     if (btn) btn.textContent = isOpen ? 'Cerrar playlist' : 'Abrir playlist';
   }
 
-  return { init, play, openPlaylist, isUnlocked };
+  function _syncStopBtn() {
+    const btn  = document.getElementById('kmStopBtn');
+    if (!btn) return;
+    const song = document.getElementById('kmSong');
+    const playing = song && !song.paused;
+    const pauseIcon = '<svg viewBox="0 0 24 24" fill="currentColor" width="15" height="15"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>';
+    const playIcon  = '<svg viewBox="0 0 24 24" fill="currentColor" width="15" height="15"><path d="M8 5v14l11-7z"/></svg>';
+    btn.innerHTML = (playing ? pauseIcon + ' Pausar canción' : playIcon + ' Reproducir canción');
+  }
+
+  function toggleUnlocked() {
+    const song = document.getElementById('kmSong');
+    if (!song) return;
+    if (song.paused) {
+      song.play().catch(() => {});
+    } else {
+      song.pause();
+    }
+    setTimeout(_syncStopBtn, 50);
+  }
+
+  return { init, play, openPlaylist, isUnlocked, toggleUnlocked, syncStopBtn: _syncStopBtn };
 })();
 
 /* Llave 3 — Música */
@@ -1498,7 +1546,8 @@ const RetoCupon = (() => {
   const LS_AT    = 'ks_unlocked_at';
   const LS_NUM   = 'ks_coupon_num';
   const LS_WISH  = 'ks_wish';
-  const COOLDOWN = 3 * 24 * 60 * 60 * 1000;
+  const LS_DONE  = 'ks_done';
+  const COOLDOWN = 2 * 24 * 60 * 60 * 1000;
 
   const CUPONES = [
     { premio: 'Tu comida preferida',   valido: 'un antojo especial',      codigo: 'AMOR-001' },
@@ -1512,33 +1561,43 @@ const RetoCupon = (() => {
 
   function _cupon() { return CUPONES[_num % CUPONES.length]; }
 
-  function _daysLeft(at) {
-    return Math.ceil((COOLDOWN - (Date.now() - at)) / 86400000);
+  function _timeLeft(at) {
+    const ms   = COOLDOWN - (Date.now() - at);
+    const hrs  = Math.ceil(ms / 3600000);
+    if (hrs <= 24) return `Vuelve en ${hrs} hora${hrs !== 1 ? 's' : ''}.`;
+    const days = Math.ceil(ms / 86400000);
+    return `Vuelve en ${days} día${days !== 1 ? 's' : ''}.`;
   }
 
   function _fill(wish) {
     const c = _cupon();
-    document.querySelectorAll('.ks-field-prize').forEach(el => el.textContent = c.premio);
-    document.querySelectorAll('.ks-field-wish').forEach(el => el.textContent = 'Deseo: ' + wish);
+    document.querySelectorAll('.ks-field-prize').forEach(el => el.textContent = '');
+    document.querySelectorAll('.ks-field-wish').forEach(el => el.textContent = wish);
     document.querySelectorAll('.ks-field-code').forEach(el => el.textContent = c.codigo);
-    document.querySelectorAll('.ks-field-valid').forEach(el => el.textContent = 'Válido por: ' + c.valido);
+    document.querySelectorAll('.ks-field-valid').forEach(el => el.textContent = 'Válido por una semana');
   }
 
   function init() {
+    const done = localStorage.getItem(LS_DONE) === '1';
     const at   = parseInt(localStorage.getItem(LS_AT)  || '0');
     const num  = parseInt(localStorage.getItem(LS_NUM) || '0');
     const wish = localStorage.getItem(LS_WISH) || '';
+    _num  = num;
+    _wish = wish;
 
-    if (at > 0 && (Date.now() - at) < COOLDOWN) {
-      _num  = num;
-      _wish = wish;
-      const days = _daysLeft(at);
-      document.getElementById('ksCooldownMsg').textContent =
-        `Nuevo cupón disponible en ${days} día${days !== 1 ? 's' : ''}.`;
+    if (done && at > 0 && (Date.now() - at) < COOLDOWN) {
+      // Dentro del cooldown: re-desbloquear la llave y mostrar cuenta regresiva
       _fill(wish);
-      document.getElementById('ks-challenge').classList.add('hidden');
-      document.getElementById('ks-cooldown').classList.remove('hidden');
-    } else if (at > 0) {
+      unlockKey('secret');
+      const cdEl = document.getElementById('ksCouponCooldown');
+      if (cdEl) { cdEl.textContent = _timeLeft(at); cdEl.classList.remove('hidden'); }
+      const resetBtn = document.querySelector('.ks-btn-reset');
+      if (resetBtn) resetBtn.style.display = 'none';
+    } else if (done) {
+      // Cooldown expiró — preparar siguiente cupón y habilitar formulario
+      localStorage.removeItem(LS_DONE);
+      localStorage.removeItem(LS_AT);
+      localStorage.removeItem(LS_WISH);
       _num = (num + 1) % CUPONES.length;
       localStorage.setItem(LS_NUM, _num);
     }
@@ -1581,6 +1640,7 @@ const RetoCupon = (() => {
     localStorage.setItem(LS_AT,   Date.now().toString());
     localStorage.setItem(LS_NUM,  _num.toString());
     localStorage.setItem(LS_WISH, q4);
+    localStorage.setItem(LS_DONE, '1');
     _fill(q4);
     unlockKey('secret');
   }
@@ -1596,13 +1656,12 @@ const RetoCupon = (() => {
     modal.innerHTML = `
       <div class="ks-capture-inner">
         <div class="ks-coupon-container">
-          <img src="img/cupon.png" class="ks-coupon-img" alt="Cupón" draggable="false"/>
+          <img src="img/iconos/cupon.png" class="ks-coupon-img" alt="Cupón" draggable="false"/>
           <div class="ks-coupon-overlay">
             <p class="ks-co-for">Cupón para: <strong>mi persona favorita</strong></p>
-            <p class="ks-co-prize">${c.premio}</p>
-            <p class="ks-co-wish">Deseo: ${wish}</p>
+            <p class="ks-co-wish">${wish}</p>
             <p class="ks-co-code">${c.codigo}</p>
-            <p class="ks-co-valid">Válido por: ${c.valido}</p>
+            <p class="ks-co-valid">Válido por una semana</p>
           </div>
         </div>
         <button class="ks-btn-close" onclick="document.getElementById('ksCaptureModal').remove()">Cerrar</button>
@@ -1617,7 +1676,10 @@ const RetoCupon = (() => {
   }
 
   function reset() {
+    const at = parseInt(localStorage.getItem(LS_AT) || '0');
+    if (at > 0 && (Date.now() - at) < COOLDOWN) return;
     localStorage.removeItem(LS_AT);
+    localStorage.removeItem(LS_DONE);
     localStorage.removeItem(LS_NUM);
     localStorage.removeItem(LS_WISH);
     _num = 0; _wish = '';
@@ -1828,11 +1890,192 @@ const Expediente = (() => {
   return { init, tap, openSurprise, closeModal, playVideo, videoEnded, claimTicket };
 })();
 
+/* ============================================
+   AV UPLOAD — VIDEO Y VOZ CON CLAVE
+   ============================================ */
+const AvUpload = (() => {
+  const LS_PIN  = 'av_pin';
+  const AUDIO_K = 'av_audio';
+  const VIDEO_K = 'av_video';
+  let _audioUrl = null;
+  let _videoUrl = null;
+
+  function _status(type, msg) {
+    const el = document.getElementById(type === 'audio' ? 'avAudioStatus' : 'avVideoStatus');
+    if (el) el.textContent = msg;
+  }
+
+  function init() {
+    MicuDB.get('audios', AUDIO_K).then(blob => {
+      if (!blob) return;
+      if (_audioUrl) URL.revokeObjectURL(_audioUrl);
+      _audioUrl = URL.createObjectURL(blob);
+      const el = document.getElementById('audioPlayer');
+      if (el) el.src = _audioUrl;
+      _status('audio', 'Audio personal cargado ✓');
+    }).catch(() => {});
+
+    MicuDB.get('videos', VIDEO_K).then(blob => {
+      if (!blob) return;
+      if (_videoUrl) URL.revokeObjectURL(_videoUrl);
+      _videoUrl = URL.createObjectURL(blob);
+      const el = document.getElementById('videoPlayer');
+      if (el) el.src = _videoUrl;
+      _status('video', 'Video personal cargado ✓');
+    }).catch(() => {});
+  }
+
+  function togglePanel(type) {
+    const id    = type === 'audio' ? 'avAudioPanel' : 'avVideoPanel';
+    const other = type === 'audio' ? 'avVideoPanel' : 'avAudioPanel';
+    const panel = document.getElementById(id);
+    if (!panel) return;
+    const op = document.getElementById(other);
+    if (op) op.classList.add('hidden');
+
+    if (!panel.classList.contains('hidden')) { panel.classList.add('hidden'); return; }
+    panel.classList.remove('hidden');
+
+    const gateId   = type === 'audio' ? 'avAudioPinGate' : 'avVideoPinGate';
+    const cfgId    = type === 'audio' ? 'avAudioConfig'  : 'avVideoConfig';
+    const gate     = document.getElementById(gateId);
+    const cfg      = document.getElementById(cfgId);
+    const pin      = localStorage.getItem(LS_PIN);
+
+    if (!pin) {
+      if (gate) gate.classList.add('hidden');
+      if (cfg)  cfg.classList.remove('hidden');
+      const ft = document.getElementById(type === 'audio' ? 'avAudioFirstTime' : 'avVideoFirstTime');
+      if (ft) ft.classList.remove('hidden');
+    } else {
+      if (gate) {
+        gate.classList.remove('hidden');
+        const inp = document.getElementById(type === 'audio' ? 'avAudioPinInput' : 'avVideoPinInput');
+        const err = document.getElementById(type === 'audio' ? 'avAudioPinErr'   : 'avVideoPinErr');
+        if (inp) { inp.value = ''; setTimeout(() => inp.focus(), 50); }
+        if (err) err.classList.add('hidden');
+      }
+      if (cfg) cfg.classList.add('hidden');
+    }
+  }
+
+  function checkPin(type) {
+    const inp    = document.getElementById(type === 'audio' ? 'avAudioPinInput' : 'avVideoPinInput');
+    const err    = document.getElementById(type === 'audio' ? 'avAudioPinErr'   : 'avVideoPinErr');
+    const gate   = document.getElementById(type === 'audio' ? 'avAudioPinGate'  : 'avVideoPinGate');
+    const cfg    = document.getElementById(type === 'audio' ? 'avAudioConfig'   : 'avVideoConfig');
+    const stored = localStorage.getItem(LS_PIN);
+    if (inp && inp.value === stored) {
+      if (gate) gate.classList.add('hidden');
+      if (cfg)  { cfg.classList.remove('hidden'); cfg.style.animation = 'ktPanelIn 0.22s ease both'; }
+    } else {
+      if (err) err.classList.remove('hidden');
+      if (inp) { inp.value = ''; inp.focus(); }
+    }
+  }
+
+  function handleUpload(type, input) {
+    const file = input.files && input.files[0];
+    if (!file) return;
+    const store = type === 'audio' ? 'audios' : 'videos';
+    const key   = type === 'audio' ? AUDIO_K  : VIDEO_K;
+    MicuDB.put(store, key, file).then(() => {
+      if (type === 'audio') {
+        if (_audioUrl) URL.revokeObjectURL(_audioUrl);
+        _audioUrl = URL.createObjectURL(file);
+        const el = document.getElementById('audioPlayer');
+        if (el) el.src = _audioUrl;
+        _status('audio', 'Audio personal cargado ✓');
+      } else {
+        if (_videoUrl) URL.revokeObjectURL(_videoUrl);
+        _videoUrl = URL.createObjectURL(file);
+        const el = document.getElementById('videoPlayer');
+        if (el) el.src = _videoUrl;
+        _status('video', 'Video personal cargado ✓');
+      }
+    }).catch(() => {});
+  }
+
+  function deleteFile(type) {
+    if (!confirm('¿Eliminar el archivo? Se volverá al original.')) return;
+    const store = type === 'audio' ? 'audios' : 'videos';
+    const key   = type === 'audio' ? AUDIO_K  : VIDEO_K;
+    MicuDB.put(store, key, null).catch(() => {});
+    if (type === 'audio') {
+      if (_audioUrl) { URL.revokeObjectURL(_audioUrl); _audioUrl = null; }
+      const el = document.getElementById('audioPlayer');
+      if (el) el.src = 'audio/efectos/audio 01.ogg';
+      _status('audio', 'Sin audio personal');
+    } else {
+      if (_videoUrl) { URL.revokeObjectURL(_videoUrl); _videoUrl = null; }
+      const el = document.getElementById('videoPlayer');
+      if (el) el.src = 'video/mensaje.mp4';
+      _status('video', 'Sin video personal');
+    }
+  }
+
+  function savePin(value) {
+    if (!value || value.length < 4) return;
+    localStorage.setItem(LS_PIN, value);
+  }
+
+  function savePinFromInput(type) {
+    const inp  = document.getElementById(type === 'audio' ? 'avAudioNewPin' : 'avVideoNewPin');
+    const hint = document.getElementById(type === 'audio' ? 'avAudioPinHint' : 'avVideoPinHint');
+    if (!inp) return;
+    const val = inp.value.trim();
+    if (!val || val.length < 4) {
+      inp.classList.add('av-input-warn');
+      if (hint) hint.textContent = 'Escribe mínimo 4 caracteres.';
+      setTimeout(() => inp.classList.remove('av-input-warn'), 1500);
+      return;
+    }
+    localStorage.setItem(LS_PIN, val);
+    inp.value = '';
+    inp.placeholder = 'Contraseña guardada ✓';
+    if (hint) { hint.textContent = '¡Contraseña guardada correctamente!'; hint.style.color = '#22c55e'; }
+    const ft = document.getElementById(type === 'audio' ? 'avAudioFirstTime' : 'avVideoFirstTime');
+    if (ft) ft.classList.add('hidden');
+  }
+
+  function closePanel(type) {
+    const pin = localStorage.getItem(LS_PIN);
+    if (!pin) {
+      const inp  = document.getElementById(type === 'audio' ? 'avAudioNewPin' : 'avVideoNewPin');
+      const hint = document.getElementById(type === 'audio' ? 'avAudioPinHint' : 'avVideoPinHint');
+      if (inp) { inp.focus(); inp.classList.add('av-input-warn'); setTimeout(() => inp.classList.remove('av-input-warn'), 1500); }
+      if (hint) { hint.textContent = 'Primero establece una contraseña.'; hint.style.color = '#f43f5e'; }
+      return;
+    }
+    const p = document.getElementById(type === 'audio' ? 'avAudioPanel' : 'avVideoPanel');
+    if (p) p.classList.add('hidden');
+  }
+
+  return { init, togglePanel, checkPin, handleUpload, deleteFile, savePin, savePinFromInput, closePanel };
+})();
+
+function _applyConfig() {
+  if (!window.CONFIG) return;
+  const n = CONFIG.nombre || 'amor';
+  document.title = 'Para ' + n + ' ❤️';
+  const hero = document.querySelector('.hero-title');
+  if (hero) hero.textContent = 'Para ' + n + ' ❤️';
+  const expTitle = document.querySelector('.exp-modal-title-light');
+  if (expTitle) expTitle.textContent = 'Para ti, ' + n;
+}
+
 document.addEventListener('DOMContentLoaded', () => {
+  _applyConfig();
   TimeKey.init();
   PhotoKey.init();
   RetoCupon.init();
   MusicKey.init();
+  AvUpload.init();
+  const _kmSong = document.getElementById('kmSong');
+  if (_kmSong) {
+    _kmSong.addEventListener('pause', () => MusicKey.syncStopBtn());
+    _kmSong.addEventListener('ended', () => MusicKey.syncStopBtn());
+  }
   if (musicaActiva) unlockMusicKey();
   Expediente.init();
 });
@@ -1848,7 +2091,6 @@ function toggleKeys() {
   label.textContent = isOpen ? 'Cerrar las llaves' : 'Abrir las llaves';
   const img = document.getElementById('klHeaderImg');
   if (isOpen) {
-    if (bgMusic) bgMusic.volume = 0.1;
     if (img) {
       img.classList.add('kl-dancing');
       lanzarEstrellasDesdImg(img, 22);
@@ -1860,7 +2102,6 @@ function toggleKeys() {
       audio.volume = 0.6;
       audio.play().catch(() => {});
       audio.onended = () => {
-        if (bgMusic) bgMusic.volume = 0.5;
         if (img) img.classList.remove('kl-dancing');
       };
     }
@@ -1871,11 +2112,41 @@ function toggleKeys() {
 }
 
 /* Botón sorpresa final */
+function lanzarConfettiPantalla(count = 80) {
+  const cont = document.getElementById('heartsContainer') || document.body;
+  const corazones = ['💖','💗','❤','💕','💝'];
+  const estrellas = ['★','✦','✧','✶','⭐','✨'];
+  const colores   = ['#FFD700','#F5D880','#FF6FA6','#E94E77','#C6285B','#fff'];
+  for (let i = 0; i < count; i++) {
+    const el = document.createElement('div');
+    el.className = 'confetti-piece';
+    const isHeart = Math.random() < 0.55;
+    if (isHeart) {
+      el.textContent = corazones[Math.floor(Math.random() * corazones.length)];
+      el.style.fontSize = (14 + Math.random() * 18) + 'px';
+    } else {
+      el.textContent = estrellas[Math.floor(Math.random() * estrellas.length)];
+      el.style.color  = colores[Math.floor(Math.random() * colores.length)];
+      el.style.fontSize = (10 + Math.random() * 16) + 'px';
+      el.style.textShadow = '0 0 8px rgba(255,215,80,0.7)';
+    }
+    el.style.left  = (Math.random() * 100) + 'vw';
+    el.style.setProperty('--drift', ((Math.random() - 0.5) * 240) + 'px');
+    el.style.setProperty('--spin',  ((Math.random() - 0.5) * 1080) + 'deg');
+    el.style.setProperty('--dur',   (2.6 + Math.random() * 2.2) + 's');
+    el.style.setProperty('--delay', (Math.random() * 1.4) + 's');
+    cont.appendChild(el);
+    setTimeout(() => el.remove(), 5500);
+  }
+}
+
 function showKeysFinale(btn) {
   btn.disabled = true;
-  btn.textContent = '💖 ¡Te amo, Geraldine!';
+  btn.textContent = '💖 ¡Te amo, ' + ((window.CONFIG && CONFIG.nombre) || 'Geraldine') + '!';
   lanzarCorazones(btn, 30);
   lanzarDestellosDorados(btn, 20);
+  lanzarConfettiPantalla(90);
+  setTimeout(() => lanzarConfettiPantalla(60), 900);
   vibrar([50, 30, 80, 30, 100]);
 }
 
@@ -1916,8 +2187,8 @@ const audioProgress = document.getElementById('audioProgress');
 
 function duckMusic(duck) {
   if (!bgMusic) return;
-  const target = duck ? 0.07 : 0.5;
-  const step   = duck ? -0.04 : 0.04;
+  const target = duck ? 0.05 : 0.5;
+  const step   = duck ? -0.09 : 0.05;
   clearInterval(bgMusic._duckTimer);
   bgMusic._duckTimer = setInterval(() => {
     bgMusic.volume = Math.min(1, Math.max(0, bgMusic.volume + step));
@@ -1925,8 +2196,28 @@ function duckMusic(duck) {
       bgMusic.volume = target;
       clearInterval(bgMusic._duckTimer);
     }
-  }, 40);
+  }, 20);
 }
+
+const _DUCK_EXCLUDE = new Set(['bgMusic', 'btnSfx']);
+let _duckActive = 0;
+function _onMediaPlay(e) {
+  const m = e.target;
+  if (!m || _DUCK_EXCLUDE.has(m.id)) return;
+  if (!(m.tagName === 'AUDIO' || m.tagName === 'VIDEO')) return;
+  _duckActive++;
+  duckMusic(true);
+}
+function _onMediaStop(e) {
+  const m = e.target;
+  if (!m || _DUCK_EXCLUDE.has(m.id)) return;
+  if (!(m.tagName === 'AUDIO' || m.tagName === 'VIDEO')) return;
+  _duckActive = Math.max(0, _duckActive - 1);
+  if (_duckActive === 0) duckMusic(false);
+}
+document.addEventListener('play',  _onMediaPlay, true);
+document.addEventListener('pause', _onMediaStop, true);
+document.addEventListener('ended', _onMediaStop, true);
 
 function toggleAudio(btn) {
   vibrar([25]);

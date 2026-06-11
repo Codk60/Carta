@@ -125,7 +125,7 @@
   <button id="musicToggle" class="music-btn" onclick="toggleMusic()" aria-label="Música de fondo">
     <span id="musicDisc" class="music-icon">♪</span>
   </button>
-  <audio id="bgMusic" src="audio/musica/Axel - Amo (Videoclip).mp3" loop preload="auto"></audio>
+  <audio id="bgMusic" src="audio/musica/musica%20principal%20del%20proyecto.mp3" loop preload="auto"></audio>
   <audio id="btnSfx" src="audio/efectos/efecto%20de%20boton.mp3" preload="auto"></audio>
 
   <!-- ===== OVERLAY DE VOZ ===== -->
@@ -154,27 +154,27 @@
       <h2 class="section-title">✦ Nuestros momentos</h2>
       <div class="polaroid-grid">
         <div class="polaroid" style="--rot:-4deg;--delay:0s">
-          <div class="polaroid-photo grad-1"><img src="img/fotos/02.jpeg" alt="" loading="lazy"/><span class="ph-emoji">🌸</span></div>
+          <div class="polaroid-photo grad-1"><img src="img/fotos/foto1.jpg" alt="" loading="lazy"/><span class="ph-emoji">🌸</span></div>
           <p class="polaroid-caption">Contigo todo es mejor</p>
         </div>
         <div class="polaroid" style="--rot:3deg;--delay:0.1s">
-          <div class="polaroid-photo grad-2"><img src="img/fotos/05.jpeg" alt="" loading="lazy"/><span class="ph-emoji">💕</span></div>
+          <div class="polaroid-photo grad-2"><img src="img/fotos/foto2.jpg" alt="" loading="lazy"/><span class="ph-emoji">💕</span></div>
           <p class="polaroid-caption">Mi lugar favorito</p>
         </div>
         <div class="polaroid" style="--rot:-2deg;--delay:0.2s">
-          <div class="polaroid-photo grad-3"><img src="img/fotos/WhatsApp Image 2026-06-07 at 2.11.26 PM.jpeg" alt="" loading="lazy"/><span class="ph-emoji">✨</span></div>
+          <div class="polaroid-photo grad-3"><img src="img/fotos/foto3.jpg" alt="" loading="lazy"/><span class="ph-emoji">✨</span></div>
           <p class="polaroid-caption">El 04 y todo lo demás</p>
         </div>
         <div class="polaroid" style="--rot:4deg;--delay:0.3s">
-          <div class="polaroid-photo grad-1"><img src="img/fotos/foto4.jpeg" alt="" loading="lazy"/><span class="ph-emoji">🌹</span></div>
+          <div class="polaroid-photo grad-1"><img src="img/fotos/foto4.jpg" alt="" loading="lazy"/><span class="ph-emoji">🌹</span></div>
           <p class="polaroid-caption">Siempre tú</p>
         </div>
         <div class="polaroid" style="--rot:-3deg;--delay:0.4s">
-          <div class="polaroid-photo grad-2"><img src="img/fotos/foto5.jpeg" alt="" loading="lazy"/><span class="ph-emoji">💖</span></div>
+          <div class="polaroid-photo grad-2"><img src="img/fotos/foto5.jpg" alt="" loading="lazy"/><span class="ph-emoji">💖</span></div>
           <p class="polaroid-caption">Mis ojos favoritos</p>
         </div>
         <div class="polaroid" style="--rot:2deg;--delay:0.5s">
-          <div class="polaroid-photo grad-3"><img src="img/fotos/foto6.jpeg" alt="" loading="lazy"/><span class="ph-emoji">🌸</span></div>
+          <div class="polaroid-photo grad-3"><img src="img/fotos/foto6.jpg" alt="" loading="lazy"/><span class="ph-emoji">🌸</span></div>
           <p class="polaroid-caption">Tú y yo, siempre</p>
         </div>
       </div>
@@ -434,6 +434,10 @@
                 <p class="km-unlock-title">Playlist desbloqueada</p>
                 <p class="km-unlock-sub">Estas canciones las guardé porque de alguna forma me recuerdan a ti.</p>
               </div>
+              <button class="km-play-btn" id="kmStopBtn" onclick="MusicKey.toggleUnlocked()" style="margin-bottom:8px;">
+                <svg viewBox="0 0 24 24" fill="currentColor" width="15" height="15"><path d="M8 5v14l11-7z"/></svg>
+                Reproducir canción
+              </button>
               <button class="km-open-playlist-btn" id="kmOpenPlaylistBtn" onclick="MusicKey.openPlaylist()">Abrir playlist</button>
               <div class="km-playlist-section" id="kmPlaylistSection">
                 <div class="km-playlist-inner">
@@ -505,7 +509,7 @@
                 </div>
 
                 <div class="ks-step hidden" id="ksStep4">
-                  <label class="ks-label">¿Qué sorpresa o plan especial quisieras reclamar con este cupón?</label>
+                  <label class="ks-label ks-label-wish">¿Qué sorpresa o plan especial quisieras reclamar con este cupón?</label>
                   <input type="text" class="ks-input" id="ksQ4" placeholder="Lo que quieras reclamar..." autocomplete="off" inputmode="text"/>
                   <p class="ks-err hidden" id="ksError4">Escribe qué quieres reclamar para continuar.</p>
                   <div class="ks-nav-row">
@@ -517,24 +521,12 @@
 
               <!-- Estado en espera (cooldown) -->
               <div id="ks-cooldown" class="hidden">
-                <p class="ks-cooldown-msg" id="ksCooldownMsg">Nuevo cupón disponible pronto.</p>
-                <div class="ks-coupon-wrap">
-                  <div class="ks-coupon-container">
-                    <img src="img/iconos/cupon.png" class="ks-coupon-img" alt="Cupón" draggable="false"/>
-                    <div class="ks-coupon-overlay">
-                      <p class="ks-co-for">Cupón para: <strong>mi persona favorita</strong></p>
-                      <p class="ks-co-prize ks-field-prize"></p>
-                      <p class="ks-co-wish ks-field-wish"></p>
-                      <p class="ks-co-code ks-field-code"></p>
-                      <p class="ks-co-valid ks-field-valid"></p>
-                    </div>
-                  </div>
+                <div class="ks-used-card">
+                  <div class="ks-used-icon">🎟️</div>
+                  <p class="ks-used-title">Ya usaste tu cupón</p>
+                  <p class="ks-used-sub">Este cupón se puede usar cada 2 días.</p>
+                  <p class="ks-used-countdown" id="ksCooldownMsg">Vuelve en 2 días.</p>
                 </div>
-                <div class="ks-action-row">
-                  <button class="ks-btn-capture" onclick="RetoCupon.prepareCapture()">Preparar para captura</button>
-                  <button class="ks-btn-wa" onclick="RetoCupon.sendWhatsApp()">Enviar por WhatsApp</button>
-                </div>
-                <button class="ks-btn-reset" onclick="RetoCupon.reset()">Volver a responder</button>
               </div>
 
             </div><!-- /key-locked-face -->
@@ -552,6 +544,7 @@
                     <p class="ks-co-valid ks-field-valid"></p>
                   </div>
                 </div>
+                <p class="ks-open-cooldown hidden" id="ksCouponCooldown"></p>
                 <button class="ks-btn-wa" onclick="RetoCupon.sendWhatsApp()">Enviar por WhatsApp</button>
                 <button class="ks-btn-capture" onclick="RetoCupon.prepareCapture()">Preparar para captura</button>
                 <button class="ks-btn-reset" onclick="RetoCupon.reset()">Volver a responder</button>
@@ -566,21 +559,29 @@
       <!-- Mensaje final -->
       <div class="kl-finale hidden" id="keysFinale">
         <div class="kl-finale-icon">
-          <svg viewBox="0 0 36 36" width="44" height="44" fill="none">
-            <path d="M18 31s-13-8-13-17a9 9 0 0 1 13-8 9 9 0 0 1 13 8c0 9-13 17-13 17z" fill="#F6C453" stroke="#D4A820" stroke-width="1.5"/>
-            <rect x="14.5" y="16" width="7" height="6" rx="1.5" fill="#8A0032"/>
-            <path d="M14.5 16v-2a3.5 3.5 0 0 1 7 0v2" stroke="#8A0032" stroke-width="1.5" fill="none"/>
+          <svg viewBox="0 0 36 36" width="48" height="48" fill="none">
+            <defs>
+              <linearGradient id="klFinaleHeart" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%"   stop-color="#E94E77"/>
+                <stop offset="60%"  stop-color="#C6285B"/>
+                <stop offset="100%" stop-color="#9B1040"/>
+              </linearGradient>
+            </defs>
+            <path d="M18 31s-13-8-13-17a9 9 0 0 1 13-8 9 9 0 0 1 13 8c0 9-13 17-13 17z" fill="url(#klFinaleHeart)" stroke="#D4A843" stroke-width="1.5"/>
+            <rect x="14.5" y="16" width="7" height="6" rx="1.5" fill="#fff7e8"/>
+            <path d="M14.5 16v-2a3.5 3.5 0 0 1 7 0v2" stroke="#fff7e8" stroke-width="1.5" fill="none"/>
           </svg>
         </div>
         <p class="kl-finale-title">Ya tienes todas las llaves...</p>
         <p class="kl-finale-sub">ahora sí puedes entrar a la parte más sincera de mi corazón.</p>
-        <button class="kl-finale-btn" onclick="showKeysFinale(this)">Abrir mi sorpresa final 💖</button>
+        <button class="kl-finale-btn" onclick="showKeysFinale(this)">Descubrir lo que siento por ti ✨</button>
       </div>
 
         </div><!-- /kl-collapse-inner -->
       </div><!-- /kl-collapse-body -->
 
       <audio id="toystoryAudio" src="audio/musica/TOY%20STORY%20hasta%20el%20infinito%20y%20mas%20all%C3%A1%20HD.mp3" preload="none" loop></audio>
+      <audio id="kmSong" src="audio/musica/Si%20Nos%20Dejan.mp3" preload="auto"></audio>
 
     </section>
 
@@ -600,12 +601,56 @@
             <h2 class="av-title">Mi voz, solo para ti</h2>
             <p class="av-desc">Grabé esto pensando solo en ti.</p>
           </div>
+          <button type="button" class="av-gear-btn" onclick="AvUpload.togglePanel('audio')" aria-label="Configurar audio">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          </button>
         </div>
         <button class="av-btn av-audio-btn" id="playBtn" onclick="toggleAudio(this)">Escuchar mi voz</button>
         <audio id="audioPlayer" src="audio/efectos/audio 01.ogg" preload="none"></audio>
         <div class="audio-progress hidden" id="audioProgress">
           <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
           <span class="audio-time" id="audioTime">0:00</span>
+        </div>
+        <div class="av-admin-panel hidden" id="avAudioPanel" onclick="event.stopPropagation()">
+          <!-- PIN Gate -->
+          <div class="av-pgate" id="avAudioPinGate">
+            <div class="av-pgate-icon">🔐</div>
+            <p class="av-pgate-title">Área de administración</p>
+            <p class="av-pgate-label">Ingresa tu contraseña para continuar</p>
+            <div class="av-pgate-row">
+              <input type="password" class="av-pgate-input" id="avAudioPinInput" placeholder="Contraseña" maxlength="6"
+                     onkeydown="if(event.key==='Enter')AvUpload.checkPin('audio')"/>
+              <button type="button" class="av-pgate-ok" onclick="AvUpload.checkPin('audio')">Entrar</button>
+            </div>
+            <p class="av-pgate-err hidden" id="avAudioPinErr">Clave incorrecta, intenta de nuevo.</p>
+          </div>
+          <!-- Config -->
+          <div class="av-admin-cfg hidden" id="avAudioConfig">
+            <p class="av-cfg-title">⚙️ Configuración — Mi Voz</p>
+            <div class="av-cfg-firsttime hidden" id="avAudioFirstTime">
+              Establece una contraseña abajo para proteger este panel antes de cerrar.
+            </div>
+            <div class="av-cfg-section">
+              <p class="av-cfg-sec-label">Archivo de audio</p>
+              <p class="av-file-status" id="avAudioStatus">Sin audio personal</p>
+              <label class="av-upload-lbl">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="13" height="13"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                Subir audio de voz
+                <input type="file" accept="audio/*" id="avAudioInput" onchange="AvUpload.handleUpload('audio',this)" hidden/>
+              </label>
+              <button type="button" class="av-del-btn" onclick="AvUpload.deleteFile('audio')">Eliminar audio</button>
+            </div>
+            <div class="av-cfg-section">
+              <p class="av-cfg-sec-label">Contraseña de acceso</p>
+              <div class="av-pin-row">
+                <input type="password" class="av-cfg-input" id="avAudioNewPin" placeholder="Nueva contraseña (4–6 dígitos)" maxlength="6"
+                       onkeydown="if(event.key==='Enter')AvUpload.savePinFromInput('audio')"/>
+                <button type="button" class="av-pin-save" onclick="AvUpload.savePinFromInput('audio')">Guardar</button>
+              </div>
+              <p class="av-pin-hint" id="avAudioPinHint">Mínimo 4 caracteres</p>
+            </div>
+            <button type="button" class="av-close-btn" onclick="AvUpload.closePanel('audio')">Listo ✓</button>
+          </div>
         </div>
       </div>
 
@@ -622,10 +667,54 @@
             <h2 class="av-title">Un mensaje que grabé para ti</h2>
             <p class="av-desc">Cuando lo veas, sé que lo vas a sentir.</p>
           </div>
+          <button type="button" class="av-gear-btn" onclick="AvUpload.togglePanel('video')" aria-label="Configurar video">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          </button>
         </div>
         <button class="av-btn av-video-btn" onclick="showVideo(this)">Ver video sorpresa</button>
         <div class="video-container hidden" id="videoContainer">
           <video id="videoPlayer" src="video/mensaje.mp4" controls playsinline preload="none"></video>
+        </div>
+        <div class="av-admin-panel hidden" id="avVideoPanel" onclick="event.stopPropagation()">
+          <!-- PIN Gate -->
+          <div class="av-pgate" id="avVideoPinGate">
+            <div class="av-pgate-icon">🔐</div>
+            <p class="av-pgate-title">Área de administración</p>
+            <p class="av-pgate-label">Ingresa tu contraseña para continuar</p>
+            <div class="av-pgate-row">
+              <input type="password" class="av-pgate-input" id="avVideoPinInput" placeholder="Contraseña" maxlength="6"
+                     onkeydown="if(event.key==='Enter')AvUpload.checkPin('video')"/>
+              <button type="button" class="av-pgate-ok" onclick="AvUpload.checkPin('video')">Entrar</button>
+            </div>
+            <p class="av-pgate-err hidden" id="avVideoPinErr">Clave incorrecta, intenta de nuevo.</p>
+          </div>
+          <!-- Config -->
+          <div class="av-admin-cfg hidden" id="avVideoConfig">
+            <p class="av-cfg-title">⚙️ Configuración — Mi Mensaje</p>
+            <div class="av-cfg-firsttime hidden" id="avVideoFirstTime">
+              Establece una contraseña abajo para proteger este panel antes de cerrar.
+            </div>
+            <div class="av-cfg-section">
+              <p class="av-cfg-sec-label">Archivo de video</p>
+              <p class="av-file-status" id="avVideoStatus">Sin video personal</p>
+              <label class="av-upload-lbl">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="13" height="13"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                Subir video personal
+                <input type="file" accept="video/*" id="avVideoInput" onchange="AvUpload.handleUpload('video',this)" hidden/>
+              </label>
+              <button type="button" class="av-del-btn" onclick="AvUpload.deleteFile('video')">Eliminar video</button>
+            </div>
+            <div class="av-cfg-section">
+              <p class="av-cfg-sec-label">Contraseña de acceso</p>
+              <div class="av-pin-row">
+                <input type="password" class="av-cfg-input" id="avVideoNewPin" placeholder="Nueva contraseña (4–6 dígitos)" maxlength="6"
+                       onkeydown="if(event.key==='Enter')AvUpload.savePinFromInput('video')"/>
+                <button type="button" class="av-pin-save" onclick="AvUpload.savePinFromInput('video')">Guardar</button>
+              </div>
+              <p class="av-pin-hint" id="avVideoPinHint">Mínimo 4 caracteres</p>
+            </div>
+            <button type="button" class="av-close-btn" onclick="AvUpload.closePanel('video')">Listo ✓</button>
+          </div>
         </div>
       </div>
 
@@ -855,6 +944,7 @@
   <!-- Corazones y destellos flotantes -->
   <div id="heartsContainer" aria-hidden="true"></div>
 
+  <script src="config.js"></script>
   <script src="script.js"></script>
 </body>
 </html>
